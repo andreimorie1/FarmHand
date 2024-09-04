@@ -1,4 +1,4 @@
-package com.example.farmhand.authentication.authModels
+package com.example.farmhand.models
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

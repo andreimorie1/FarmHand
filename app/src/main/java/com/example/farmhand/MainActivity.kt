@@ -4,8 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.farmhand.Screens.AuthScreen
-import com.example.farmhand.authentication.authModels.AuthViewModel
+import com.example.farmhand.components.MainAppScaffold
 import com.example.farmhand.ui.theme.FarmHandTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,8 +13,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FarmHandTheme {
-                val authViewModel = AuthViewModel()
-                AuthScreen(authViewModel)
+                //AuthScreen()
+                MainAppScaffold()
             }
         }
     }

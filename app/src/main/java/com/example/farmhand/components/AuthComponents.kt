@@ -1,4 +1,4 @@
-package com.example.farmhand.authentication.composables
+package com.example.farmhand.components
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -31,17 +31,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.farmhand.authentication.authModels.AuthViewModel
 import com.example.farmhand.ui.theme.Typography
 
 
 //Form +AuthTextField
 @Composable
-fun authForm(viewModel: AuthViewModel) {
+fun AuthForm(
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityToggle: () -> Unit
+) {
     Column {
         AuthTextField(
-            value = viewModel.username,
-            onValueChange = viewModel::onUsernameChange,
+            value = username,
+            onValueChange = onUsernameChange,
             label = { Text(text = "Username", style = Typography.labelMedium) },
             placeholder = {
                 Text(
@@ -52,20 +58,19 @@ fun authForm(viewModel: AuthViewModel) {
             },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Password"
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = "Username"
                 )
-            },
-
-            )
+            }
+        )
         Spacer(modifier = Modifier.height(10.dp))
         AuthTextField(
-            value = viewModel.password,
-            onValueChange = viewModel::onPasswordChange,
+            value = password,
+            onValueChange = onPasswordChange,
             label = { Text(text = "Password", style = Typography.labelMedium) },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Lock,
+                    imageVector = Icons.Rounded.Lock,
                     contentDescription = "Password"
                 )
             },
@@ -76,19 +81,20 @@ fun authForm(viewModel: AuthViewModel) {
                     fontWeight = FontWeight.ExtraLight
                 )
             },
-            visualTransformation = if (viewModel.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val image =
-                    if (viewModel.passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff //Change icon if password is visible
+                    if (passwordVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff
                 val description =
-                    if (viewModel.passwordVisible) "Hide Password" else "Show Password"
-                IconButton(onClick = viewModel::onPasswordVisibilityToggle) {
+                    if (passwordVisible) "Hide Password" else "Show Password"
+                IconButton(onClick = onPasswordVisibilityToggle) {
                     Icon(imageVector = image, contentDescription = description)
                 }
             }
         )
     }
 }
+
 
 //TextField
 @Composable
@@ -135,7 +141,7 @@ fun AuthTextField(
 
 //Button
 @Composable
-fun authButton(
+fun AuthButton(
     value: String,
     onClick: () -> Unit
 ) {
@@ -153,41 +159,39 @@ fun authButton(
             style = Typography.titleMedium,
             modifier = Modifier
                 .padding(top = 2.dp, bottom = 2.dp)
-
         )
     }
 }
 
 
+
 @Composable
 fun FormSelection(
-    viewModel: AuthViewModel
+    isSignUP: Boolean,
+    onSignInClick: () -> Unit,
+    onSignUpClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        //Log In
         TextButton(
-            onClick = { viewModel.isSignUP = false },
-
-            ) {
+            onClick = onSignInClick
+        ) {
             Text(
                 text = "Sign In",
                 style = Typography.titleLarge,
-                fontWeight = if (viewModel.isSignUP) FontWeight.Normal else FontWeight.ExtraBold
+                fontWeight = if (isSignUP) FontWeight.Normal else FontWeight.ExtraBold
             )
         }
-
-        //Sign Up
         TextButton(
-            onClick = { viewModel.isSignUP = true },
+            onClick = onSignUpClick
         ) {
             Text(
                 text = "Sign Up",
                 style = Typography.titleLarge,
-                fontWeight = if (viewModel.isSignUP) FontWeight.ExtraBold else FontWeight.Normal
+                fontWeight = if (isSignUP) FontWeight.ExtraBold else FontWeight.Normal
             )
         }
     }
