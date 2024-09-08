@@ -10,7 +10,7 @@ import com.example.farmhand.database.entities.User
 
 @Database(entities = [User::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun userDao(): UserDao
+    abstract val userDao : UserDao
 }
 
 object DatabaseClient {
