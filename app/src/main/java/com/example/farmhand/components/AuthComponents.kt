@@ -95,6 +95,42 @@ fun AuthForm(
     }
 }
 
+@Composable
+fun ReTypePassword(
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityToggle: () -> Unit
+){
+    AuthTextField(
+        value = password,
+        onValueChange = onPasswordChange,
+        label = { Text(text = "Re-Type Password", style = Typography.labelMedium) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Rounded.Lock,
+                contentDescription = "Password"
+            )
+        },
+        placeholder = {
+            Text(
+                text = "Start Typing",
+                style = Typography.labelSmall,
+                fontWeight = FontWeight.ExtraLight
+            )
+        },
+        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            val image =
+                if (passwordVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff
+            val description =
+                if (passwordVisible) "Hide Password" else "Show Password"
+            IconButton(onClick = onPasswordVisibilityToggle) {
+                Icon(imageVector = image, contentDescription = description)
+            }
+        }
+    )
+}
 
 //TextField
 @Composable

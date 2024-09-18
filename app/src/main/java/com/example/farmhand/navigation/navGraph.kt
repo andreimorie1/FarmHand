@@ -1,9 +1,11 @@
 package com.example.farmhand.navigation
 
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.farmhand.components.MainAppScaffold
 import com.example.farmhand.screens.AccountScreen
 import com.example.farmhand.screens.AuthScreen
 import com.example.farmhand.screens.HomeScreen
@@ -13,13 +15,15 @@ import com.example.farmhand.screens.WeatherScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = NavItems.Home.route) {
+    NavHost(navController = navController, startDestination = "auth") {
 
         //auth
         composable(route = "auth") {
             AuthScreen()
         }
-
+        composable(route = "scaffold") {
+            MainAppScaffold()
+        }
         //Navigation
         composable(route = NavItems.Home.route) {
             HomeScreen()
@@ -35,3 +39,5 @@ fun NavGraph(navController: NavHostController) {
         }
     }
 }
+
+

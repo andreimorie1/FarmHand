@@ -30,7 +30,7 @@ sealed class NavItems(
     )
     object PlantHealth : NavItems(
         route = "plant_health",
-        title = "Weather",
+        title = "Plant health",
         selectedIcon = R.drawable.psychiatry_fill,
         unselectedIcon = R.drawable.psychiatry_outline,
         hasBadge = false,

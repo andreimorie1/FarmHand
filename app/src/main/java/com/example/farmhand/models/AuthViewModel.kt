@@ -1,25 +1,51 @@
 package com.example.farmhand.models
 
+import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.farmhand.data.UserDataRepository
 import com.example.farmhand.database.entities.User
 import com.example.farmhand.database.repositories.UserRepository
+import com.example.farmhand.security.PasswordHash
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(private val repository: UserRepository) : ViewModel() {
-    var _username by mutableStateOf("")
-    val username: String
-        get() = _username
+class AuthViewModel @Inject constructor(
+    private val repository: UserRepository,
+    private val userDataRepository: UserDataRepository
+) : ViewModel() {
 
-    var _password by mutableStateOf("")
-    val password: String
-        get() = _password
+    private val passwordHash = PasswordHash()
+
+    //Setter
+    private val _isAuthenticated = MutableStateFlow(false)
+
+    private var _username by mutableStateOf("")
+
+    private var _password by mutableStateOf("")
+
+    private var _rePassword by mutableStateOf("")
+
+    var passwordVisible by mutableStateOf(false)
+
+    var isSignUP by mutableStateOf(false)
+
+    var rePasswordVisible2 by mutableStateOf(false)
+
+    val isAuthenticated: MutableStateFlow<Boolean> get() = _isAuthenticated
+
+    fun onRePasswordChange(rePassword: String) {
+        _rePassword = rePassword
+    }
 
     fun onUsernameChange(newUsername: String) {
         _username = newUsername
@@ -29,57 +55,117 @@ class AuthViewModel @Inject constructor(private val repository: UserRepository) 
         _password = newPassword
     }
 
-    var passwordVisible by mutableStateOf(false)
     fun onPasswordVisibilityToggle() {
         passwordVisible = !passwordVisible
     }
 
+    fun onPasswordVisibilityToggle2() {
+        rePasswordVisible2 = !rePasswordVisible2
+    }
 
-    var isSignUP by mutableStateOf(false)
+    //getter
+    val username: String
+        get() = _username
 
-    val user = User(
-        username = username.trim(),
-        password = password.trim()
-    )
+    val password: String
+        get() = _password
 
+    val rePassword: String
+        get() = _rePassword
+
+    // Text field reset
+    fun fieldReset() {
+        _username = ""
+        _password = ""
+        _rePassword = ""
+        _errorMessages.clear()
+    }
+
+    // Error messages
+    private val _errorMessages = mutableStateListOf<String>()
+    val errorMessages: List<String> = _errorMessages
+
+    //Submit Button
     fun onAuthButtonClick() {
+        _errorMessages.clear()
+        //Sign up logic
         if (isSignUP) {
             viewModelScope.launch {
-                val errorMessages = validateInputs()
+                delay(1000L)
+                _errorMessages.addAll(signInValidation(_username))
+                val errorMessages = signInValidation(_username)
                 if (errorMessages.isEmpty()) {
                     registerUser()
-                } else{
-                    // TODO: Show error messages
                 }
             }
         } else {
-            // TODO: Move to HomeScreen
+            viewModelScope.launch {
+                _errorMessages.addAll(loginValidation())
+                if (errorMessages.isEmpty()) {
+                    //delay(1500L)
+                    val user = repository.getUserByUsername(_username)
+                    if (user != null) {
+                        //userDataRepository.setCurrentUser(user)
+                        _isAuthenticated.update { true }
+                        Log.d("AuthModel", "is User authenticated: ${_isAuthenticated.value}")
+
+                    }
+                }
+            }
         }
     }
 
+    // Login Logic
+    private suspend fun loginValidation(): List<String> {
+        val errorMessages = mutableListOf<String>()
+        val toValidate = repository.getUserByUsername(_username.trim())
+
+        if (toValidate == null) {
+            errorMessages.add("User does not exist")
+        }
+        if (toValidate != null) {
+            if (!passwordHash.verifyPassword(_password.trim(), toValidate.password)) {
+                errorMessages.add("Incorrect Password")
+            }
+        }
+        if (_username.isBlank() || _password.isBlank()) {
+            errorMessages.add("Username or Password must be filled")
+        }
+
+        return errorMessages
+    }
+
+    //Register Logic
     private suspend fun registerUser() {
-        viewModelScope.launch {
-            val testUser = User(
-                username = _username,
-                password = _password
-            )
-            repository.insertUser(testUser)
-        }
+        val testUser = User(
+            username = _username.trim(),
+            password = passwordHash.hashPassword(_password.trim()),
+        )
+        delay(1000L)
+        _errorMessages.clear()
+        repository.insertUser(testUser)
+        _errorMessages.add("User Registered Successfully")
     }
 
-    private suspend fun validateInputs(): List<String> {
+    // Sign Up Validations
+    private suspend fun signInValidation(username: String): List<String> {
         val errorMessages = mutableListOf<String>()
 
         if (_username.isBlank() || _password.isBlank()) {
             errorMessages.add("Username or Password must be filled")
         }
         if (_password.length < 6) {
-            errorMessages.add("Password must six characters long")
+            errorMessages.add("Password: should be at least six characters long")
         }
         if (!_password.matches(Regex(".*[A-Z].*[a-z].*|.*[a-z].*[A-Z].*"))) {
-            errorMessages.add("Password must contain at least one uppercase and lowercase letter")
+            errorMessages.add("Password: at least one uppercase and lowercase letter")
         }
-
+        if (_password != _rePassword) {
+            errorMessages.add("Passwords do not match")
+        }
+        if (repository.getUserByUsername(username) != null) {
+            errorMessages.add("Username already exists")
+        }
         return errorMessages
     }
 }

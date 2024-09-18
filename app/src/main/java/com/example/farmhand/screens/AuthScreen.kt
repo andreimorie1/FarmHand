@@ -18,10 +18,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.farmhand.components.AuthButton
 import com.example.farmhand.components.AuthForm
 import com.example.farmhand.components.FormSelection
+import com.example.farmhand.components.ReTypePassword
 import com.example.farmhand.models.AuthViewModel
 import com.example.farmhand.ui.theme.Typography
 
-@Preview(showSystemUi = true)
+@Preview
 @Composable
 fun AuthScreen() {
     // Obtain the ViewModel instance
@@ -41,12 +42,23 @@ fun AuthScreen() {
             style = Typography.displayMedium,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(170.dp))
+        Spacer(modifier = Modifier.height(140.dp))
 
+        //Sign in or Sign up Form Selection
         FormSelection(
             isSignUP = authViewModel.isSignUP,
-            onSignInClick = { authViewModel.isSignUP = false },
-            onSignUpClick = { authViewModel.isSignUP = true }
+            onSignInClick = {
+                if (authViewModel.isSignUP){
+                    authViewModel.fieldReset()
+                }
+                authViewModel.isSignUP = false
+            },
+            onSignUpClick = {
+                if (!authViewModel.isSignUP){
+                    authViewModel.fieldReset()
+                }
+                authViewModel.isSignUP = true
+            }
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -59,7 +71,29 @@ fun AuthScreen() {
             passwordVisible = authViewModel.passwordVisible,
             onPasswordVisibilityToggle = authViewModel::onPasswordVisibilityToggle
         )
+        Spacer(modifier = Modifier.height(10.dp))
+        if (authViewModel.isSignUP) {
+            ReTypePassword(
+                password = authViewModel.rePassword,
+                onPasswordChange = authViewModel::onRePasswordChange,
+                passwordVisible = authViewModel.rePasswordVisible2,
+                onPasswordVisibilityToggle = authViewModel::onPasswordVisibilityToggle2
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.Start
+        ) {
+            for (error in authViewModel.errorMessages) {
+                Text(
+                    text = error,
+                    color = if (error == "User Registered Successfully") androidx.compose.ui.graphics.Color.Green else androidx.compose.ui.graphics.Color.Red,
+                    style = Typography.labelMedium,
 
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(50.dp))
         AuthButton(
             value = if (authViewModel.isSignUP) "Sign Up" else "Sign In",
