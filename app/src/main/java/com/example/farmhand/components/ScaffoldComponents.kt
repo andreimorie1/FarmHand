@@ -19,6 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.farmhand.models.ScaffoldViewModel
 import com.example.farmhand.navigation.NavGraph
@@ -33,12 +36,14 @@ fun NavIcon(
     Icon(painter = painterResource(id = id), contentDescription = contentDescription)
 }
 
-@Preview
 @Composable
-fun MainAppScaffold() {
+fun MainAppScaffold(
+    navController: NavHostController, // Passed down from NavGraph
+    content: @Composable (NavHostController) -> Unit // Expecting a NavHostController for inner screens
+) {
     val scaffoldModel = ScaffoldViewModel()
     val bottomNavState by scaffoldModel.bottomNavState
-    val navController = rememberNavController() // Initialize NavController
+    val innerNavController = rememberNavController() // Inner NavController for bottom nav screens
 
     Scaffold(
         bottomBar = {
@@ -48,8 +53,8 @@ fun MainAppScaffold() {
                         selected = bottomNavState == index,
                         onClick = {
                             scaffoldModel.updateBottomNavState(index)
-                            navController.navigate(navItemState.route) {
-                                popUpTo(navController.graph.startDestinationId){
+                            innerNavController.navigate(navItemState.route) {
+                                popUpTo(innerNavController.graph.startDestinationId) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -57,26 +62,20 @@ fun MainAppScaffold() {
                             }
                         },
                         icon = {
-                            BadgedBox(badge = {
-                                if (navItemState.hasBadge) Badge {}
-                                if (navItemState.badgeNum != 0) Badge {
-                                    Text(text = navItemState.badgeNum.toString())
-                                }
-                            }) {
-                                NavIcon(
-                                    id = if (bottomNavState == index) navItemState.selectedIcon else navItemState.unselectedIcon,
-                                    contentDescription = navItemState.title,
-                                    modifier = Modifier.size(if (bottomNavState == index) 35.dp else 24.dp )
-                                )
-                            }
+                            NavIcon(
+                                id = if (bottomNavState == index) navItemState.selectedIcon else navItemState.unselectedIcon,
+                                contentDescription = navItemState.title,
+                                modifier = Modifier.size(if (bottomNavState == index) 35.dp else 24.dp)
+                            )
                         },
                         label = {
                             Text(
                                 text = navItemState.title,
                                 style = Typography.labelSmall,
                                 fontWeight = if (bottomNavState == index) FontWeight.Bold else null,
-                                fontSize = if (bottomNavState == index) Typography.labelSmall.fontSize.times(1.18f) else Typography.labelSmall.fontSize)
-                        },
+                                fontSize = if (bottomNavState == index) Typography.labelSmall.fontSize.times(1.18f) else Typography.labelSmall.fontSize
+                            )
+                        }
                     )
                 }
             }
@@ -87,9 +86,8 @@ fun MainAppScaffold() {
                 .padding(contentPadding)
                 .fillMaxSize()
         ) {
-            NavGraph(navController)
+            content(innerNavController) // Pass the inner NavController to the content
         }
     }
 }
-
 

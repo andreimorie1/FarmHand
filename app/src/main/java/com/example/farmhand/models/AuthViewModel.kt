@@ -1,5 +1,6 @@
 package com.example.farmhand.models
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -7,41 +8,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.farmhand.data.UserDataRepository
 import com.example.farmhand.database.entities.User
 import com.example.farmhand.database.repositories.UserRepository
+import com.example.farmhand.models_shared.UserSharedModel
+import com.example.farmhand.navigation.AuthManager
 import com.example.farmhand.security.PasswordHash
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: UserRepository,
-    private val userDataRepository: UserDataRepository
+    private val sharedViewModel: UserSharedModel
 ) : ViewModel() {
 
     private val passwordHash = PasswordHash()
 
     //Setter
     private val _isAuthenticated = MutableStateFlow(false)
-
     private var _username by mutableStateOf("")
-
     private var _password by mutableStateOf("")
-
     private var _rePassword by mutableStateOf("")
-
     var passwordVisible by mutableStateOf(false)
-
     var isSignUP by mutableStateOf(false)
-
     var rePasswordVisible2 by mutableStateOf(false)
-
-    val isAuthenticated: MutableStateFlow<Boolean> get() = _isAuthenticated
 
     fun onRePasswordChange(rePassword: String) {
         _rePassword = rePassword
@@ -64,14 +60,10 @@ class AuthViewModel @Inject constructor(
     }
 
     //getter
-    val username: String
-        get() = _username
-
-    val password: String
-        get() = _password
-
-    val rePassword: String
-        get() = _rePassword
+    val username: String get() = _username
+    val password: String get() = _password
+    val rePassword: String get() = _rePassword
+    val isAuthenticated : StateFlow<Boolean> = _isAuthenticated
 
     // Text field reset
     fun fieldReset() {
@@ -87,6 +79,8 @@ class AuthViewModel @Inject constructor(
 
     //Submit Button
     fun onAuthButtonClick() {
+        Log.d("AuthViewModel", "onAuthButtonClick")
+
         _errorMessages.clear()
         //Sign up logic
         if (isSignUP) {
@@ -101,14 +95,15 @@ class AuthViewModel @Inject constructor(
         } else {
             viewModelScope.launch {
                 _errorMessages.addAll(loginValidation())
-                if (errorMessages.isEmpty()) {
-                    //delay(1500L)
+                if (_errorMessages.isEmpty()) {
                     val user = repository.getUserByUsername(_username)
                     if (user != null) {
-                        //userDataRepository.setCurrentUser(user)
-                        _isAuthenticated.update { true }
-                        Log.d("AuthModel", "is User authenticated: ${_isAuthenticated.value}")
-
+                        _isAuthenticated.value = true // Indicate login was successful
+                        AuthManager.saveAuthState(context, _isAuthenticated.value)
+                        Log.d("AuthViewModel", "User authenticated: ${_isAuthenticated.value}")
+                    } else {
+                        Log.d("AuthViewModel", "User is not authenticated: ${_isAuthenticated.value}")
+                        _errorMessages.add("User not found or password incorrect") // Add a message if user is not found
                     }
                 }
             }
@@ -131,7 +126,6 @@ class AuthViewModel @Inject constructor(
         if (_username.isBlank() || _password.isBlank()) {
             errorMessages.add("Username or Password must be filled")
         }
-
         return errorMessages
     }
 
@@ -154,12 +148,15 @@ class AuthViewModel @Inject constructor(
         if (_username.isBlank() || _password.isBlank()) {
             errorMessages.add("Username or Password must be filled")
         }
-        if (_password.length < 6) {
+        if (_password.length < 4) {
             errorMessages.add("Password: should be at least six characters long")
         }
-        if (!_password.matches(Regex(".*[A-Z].*[a-z].*|.*[a-z].*[A-Z].*"))) {
-            errorMessages.add("Password: at least one uppercase and lowercase letter")
-        }
+        /*
+        // Password: must have one uppercase and one lowercase letter
+                if (!_password.matches(Regex(".*[A-Z].*[a-z].*|.*[a-z].*[A-Z].*"))) {
+                    errorMessages.add("Password: at least one uppercase and lowercase letter")
+                }
+         */
         if (_password != _rePassword) {
             errorMessages.add("Passwords do not match")
         }

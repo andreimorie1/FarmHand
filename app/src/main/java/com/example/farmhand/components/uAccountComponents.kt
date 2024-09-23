@@ -3,15 +3,12 @@ package com.example.farmhand.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -67,7 +64,10 @@ fun uAccountField(
 }
 
 @Composable
-fun uAccountButtons() {
+fun UAccountButtons(
+    onLogOut: () -> Unit,
+    onUpdate: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -75,12 +75,12 @@ fun uAccountButtons() {
     ) {
         // Log Out Button
         Button(
-            onClick = { /*TODO*/ },
+            onClick = onLogOut,
             modifier = Modifier
                 .weight(2f)
                 .wrapContentWidth(),
 
-        ) {
+            ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.Logout,
                 contentDescription = "Edit"
@@ -94,7 +94,7 @@ fun uAccountButtons() {
 
         // Update Account Button
         FilledTonalButton(
-            onClick = { /*TODO*/ },
+            onClick = onUpdate,
             modifier = Modifier
                 .weight(2f)
                 .wrapContentWidth(),
