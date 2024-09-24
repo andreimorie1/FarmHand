@@ -32,7 +32,8 @@ fun NavIcon(
 
 @Composable
 fun MainAppScaffold(
-    content: @Composable (NavHostController) -> Unit // Expecting a NavHostController for inner screens){}
+    navController: NavHostController,
+    content: @Composable (NavHostController) -> Unit // Expecting a NavHostController for inner screens){}){}
 ) {
     val scaffoldModel = ScaffoldViewModel()
     val bottomNavState by scaffoldModel.bottomNavState
