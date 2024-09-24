@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.farmhand.database.entities.User
 import com.example.farmhand.database.repositories.UserRepository
-import com.example.farmhand.models_shared.UserSharedModel
 import com.example.farmhand.navigation.AuthManager
 import com.example.farmhand.security.PasswordHash
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +24,6 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: UserRepository,
-    private val sharedViewModel: UserSharedModel
 ) : ViewModel() {
 
     private val passwordHash = PasswordHash()
@@ -79,8 +77,6 @@ class AuthViewModel @Inject constructor(
 
     //Submit Button
     fun onAuthButtonClick() {
-        Log.d("AuthViewModel", "onAuthButtonClick")
-
         _errorMessages.clear()
         //Sign up logic
         if (isSignUP) {
@@ -99,7 +95,7 @@ class AuthViewModel @Inject constructor(
                     val user = repository.getUserByUsername(_username)
                     if (user != null) {
                         _isAuthenticated.value = true // Indicate login was successful
-                        AuthManager.saveAuthState(context, _isAuthenticated.value)
+                        AuthManager.saveAuthState(context, _isAuthenticated.value, user.uid)
                         Log.d("AuthViewModel", "User authenticated: ${_isAuthenticated.value}")
                     } else {
                         Log.d("AuthViewModel", "User is not authenticated: ${_isAuthenticated.value}")
@@ -158,10 +154,10 @@ class AuthViewModel @Inject constructor(
                 }
          */
         if (_password != _rePassword) {
-            errorMessages.add("Passwords do not match")
+            errorMessages.add("Password: do not match")
         }
         if (repository.getUserByUsername(username) != null) {
-            errorMessages.add("Username already exists")
+            errorMessages.add("Username: already exists")
         }
         return errorMessages
     }

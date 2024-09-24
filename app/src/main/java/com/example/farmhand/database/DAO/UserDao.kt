@@ -20,7 +20,7 @@ interface UserDao {
     fun deleteUser(user: User)
 
     @Query("Select * FROM user WHERE uid = :uid")
-    fun getAccountInfo(uid: Int): User?
+    fun getAccountById(uid: Int): User?
 
     @Query("SELECT * FROM user WHERE username = :username")
     fun getUserByUsername(username: String): User?

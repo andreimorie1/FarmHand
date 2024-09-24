@@ -31,17 +31,19 @@ class UserRepository(private val database: AppDatabase) {
         }
     }
 
-    // Function to get user information by user ID
-    suspend fun getAccountInfo(uid: Int): User? {
-        return withContext(Dispatchers.IO) {
-            database.userDao.getAccountInfo(uid)
-        }
-    }
-
     // Function to get user information by username
     suspend fun getUserByUsername(username: String): User? {
         return withContext(Dispatchers.IO) {
             database.userDao.getUserByUsername(username)
         }
     }
+
+    // Function to get user information by user ID
+    suspend fun getUserById(uid: Int): User? {
+        return withContext(Dispatchers.IO) {
+            database.userDao.getAccountById(uid)
+        }
+    }
+
+
 }

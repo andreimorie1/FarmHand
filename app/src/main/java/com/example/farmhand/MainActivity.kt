@@ -6,9 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.farmhand.models.AuthViewModel
 import com.example.farmhand.navigation.AuthManager
 import com.example.farmhand.navigation.NavGraph
 import com.example.farmhand.ui.theme.FarmHandTheme
@@ -33,7 +31,6 @@ class MainActivity : ComponentActivity() {
                             Log.d("MainActivity", "User is logged in ${AuthManager.isUserLoggedIn(this@MainActivity)}")
                         }
                     } else {
-
                         if (navController.currentDestination?.route != "auth") {
                             navController.navigate("auth") {
                                 // Clear the back stack
