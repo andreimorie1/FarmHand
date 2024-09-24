@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
+                // navGraph to handle navigation
                 NavGraph(navController = navController)
             }
         }
