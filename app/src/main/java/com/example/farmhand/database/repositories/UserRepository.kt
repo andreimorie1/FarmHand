@@ -8,7 +8,6 @@ import kotlinx.coroutines.withContext
 
 // Repository class for managing User data operations
 class UserRepository(private val database: AppDatabase) {
-
     // Function to insert a user into the database
     suspend fun insertUser(user: User) {
         // Run the database operation on the IO thread
@@ -44,6 +43,4 @@ class UserRepository(private val database: AppDatabase) {
             database.userDao.getAccountById(uid)
         }
     }
-
-
 }

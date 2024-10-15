@@ -1,4 +1,4 @@
-package com.example.farmhand.models
+package com.example.farmhand.user_module.models
 
 import android.content.Context
 import android.util.Log

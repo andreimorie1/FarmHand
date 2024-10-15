@@ -1,4 +1,4 @@
-package com.example.farmhand.models
+package com.example.farmhand.navigation.models
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf

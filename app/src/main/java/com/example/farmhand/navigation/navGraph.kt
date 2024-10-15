@@ -1,15 +1,19 @@
 package com.example.farmhand.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.farmhand.components.MainAppScaffold
-import com.example.farmhand.screens.AccountScreen
-import com.example.farmhand.screens.AuthScreen
+import com.example.farmhand.navigation.components.MainAppScaffold
+import com.example.farmhand.user_module.screens.AccountScreen
+import com.example.farmhand.authentication.screen.AuthScreen
 import com.example.farmhand.screens.HomeScreen
 import com.example.farmhand.screens.PlantHealthScreen
-import com.example.farmhand.screens.WeatherScreen
+import com.example.farmhand.weather.models.WeatherViewModel
+import com.example.farmhand.weather.screens.WeatherScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -30,7 +34,8 @@ fun NavGraph(navController: NavHostController) {
                         HomeScreen()
                     }
                     composable(route = NavItems.Weather.route) {
-                        WeatherScreen()
+                        val weatherViewModel: WeatherViewModel = hiltViewModel()
+                        WeatherScreen(viewModel = weatherViewModel, LocalContext.current)
                     }
                     composable(route = NavItems.PlantHealth.route) {
                         PlantHealthScreen()

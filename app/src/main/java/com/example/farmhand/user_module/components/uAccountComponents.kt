@@ -1,4 +1,4 @@
-package com.example.farmhand.components
+package com.example.farmhand.user_module.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

@@ -1,4 +1,4 @@
-package com.example.farmhand.screens
+package com.example.farmhand.authentication.screen
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.farmhand.components.AuthButton
-import com.example.farmhand.components.AuthForm
-import com.example.farmhand.components.FormSelection
-import com.example.farmhand.components.ReTypePassword
-import com.example.farmhand.models.AuthViewModel
+import com.example.farmhand.authentication.components.AuthButton
+import com.example.farmhand.authentication.components.AuthForm
+import com.example.farmhand.authentication.components.FormSelection
+import com.example.farmhand.authentication.components.ReTypePassword
+import com.example.farmhand.authentication.models.AuthViewModel
 import com.example.farmhand.ui.theme.Typography
 
 

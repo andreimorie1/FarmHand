@@ -1,4 +1,4 @@
-package com.example.farmhand.screens
+package com.example.farmhand.user_module.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.farmhand.components.UAccountButtons
-import com.example.farmhand.components.uAccountField
-import com.example.farmhand.models.uAccountModel
+import com.example.farmhand.user_module.models.uAccountModel
 import com.example.farmhand.ui.theme.Typography
+import com.example.farmhand.user_module.components.UAccountButtons
+import com.example.farmhand.user_module.components.uAccountField
 
 @Composable
 fun AccountScreen(

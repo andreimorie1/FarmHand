@@ -1,4 +1,4 @@
-package com.example.farmhand.components
+package com.example.farmhand.authentication.components
 
 
 import androidx.compose.foundation.layout.Arrangement

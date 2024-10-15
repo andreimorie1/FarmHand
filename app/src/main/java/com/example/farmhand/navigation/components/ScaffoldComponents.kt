@@ -1,4 +1,4 @@
-package com.example.farmhand.components
+package com.example.farmhand.navigation.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.farmhand.models.ScaffoldViewModel
+import com.example.farmhand.navigation.models.ScaffoldViewModel
 import com.example.farmhand.ui.theme.Typography
 
 @Composable

@@ -41,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -64,6 +65,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.storage)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,7 +83,22 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler.v2511)
 
+    //navigation
     implementation(libs.androidx.hilt.navigation.compose)
 
     debugImplementation(libs.ui.tooling)
+
+    //retrofit
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation(libs.coil.compose)
+
+    //location
+    implementation(libs.play.services.location)
+
+    //swipe refresh
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.material3)
+
+    implementation(libs.androidx.lifecycle.runtime.ktx.v262)
 }
