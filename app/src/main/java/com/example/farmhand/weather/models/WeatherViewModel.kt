@@ -6,18 +6,15 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.farmhand.weather.api.WeatherRepository
 import com.example.farmhand.weather.api.data.CurrentWeather.CurrentWeatherResponse
 import com.example.farmhand.weather.api.data.FiveDayWeather.FiveDayWeatherResponse
-import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -31,7 +28,10 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class WeatherViewModel @Inject constructor(private val repository: WeatherRepository) :
+class WeatherViewModel @Inject constructor(
+    private val repository: WeatherRepository,
+    private val locationManager: LocationManager // Assuming you have a LocationManager or similar class
+) :
     ViewModel() {
 
     var currentWeatherData: CurrentWeatherResponse? by mutableStateOf(null)
@@ -40,20 +40,25 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
     private val _isFetchingData = MutableStateFlow(false)
     val isFetchingData: StateFlow<Boolean> = _isFetchingData
 
-
-    // latitude and longtitude getter setter
-    private val _latitude = MutableStateFlow<Double?>(null)
-    private val _longitude = MutableStateFlow<Double?>(null)
-
-    val latitude: StateFlow<Double?> = _latitude.asStateFlow()
-    val longitude: StateFlow<Double?> = _longitude.asStateFlow()
-
-    fun updateLocation(latitude: Double, longitude: Double) {
-        _latitude.value = latitude
-        _longitude.value = longitude
+    init {
+        observeFetchingState() // Start observing the isFetchingData state
     }
 
-    fun refreshWeatherData(apiKey: String) {
+    // Function to observe fetching state and manage location updates accordingly
+    private fun observeFetchingState() {
+        viewModelScope.launch {
+            isFetchingData.collect { isFetching ->
+                if (isFetching) {
+                    locationManager.startLocationUpdates() // Start location updates
+                } else {
+                    delay(500)
+                    locationManager.stopLocationUpdates() // Stop location updates when fetching is done
+                }
+            }
+        }
+    }
+
+    fun refreshWeatherData(latitude: Double, longitude: Double, apiKey: String) {
         // Set fetching state to true before starting the fetch
         _isFetchingData.value = true
         // Fetch data
@@ -61,13 +66,13 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
             try {
                 // Fetch current weather and forecast
                 fetchCurrentWeatherByCoordinates(
-                    latitude.value ?: 0.0,
-                    longitude.value ?: 0.0,
+                    latitude = latitude,
+                    longitude = longitude,
                     apiKey
                 )
-                fetchFiveDayForecastByCoordinates(
-                    latitude.value ?: 0.0,
-                    longitude.value ?: 0.0,
+                fetchCurrentWeatherByCoordinates(
+                    latitude = latitude,
+                    longitude = longitude,
                     apiKey
                 )
             } catch (e: Exception) {
@@ -155,9 +160,6 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
             }
         }
     }
-
-
-
 
 
     // "dt" format to "day, month | hour:minute AM/PM"
