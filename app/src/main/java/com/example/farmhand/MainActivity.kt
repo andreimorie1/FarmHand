@@ -11,6 +11,7 @@ import com.example.farmhand.navigation.AuthManager
 import com.example.farmhand.navigation.NavGraph
 import com.example.farmhand.ui.theme.FarmHandTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 
 
 @AndroidEntryPoint

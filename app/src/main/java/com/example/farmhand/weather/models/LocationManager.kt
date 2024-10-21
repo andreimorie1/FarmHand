@@ -12,31 +12,20 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-class LocationManager (
+class LocationManager @Inject constructor(
     private val context: Context
 ) {
-
     private var fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null
 
     // State to hold the current location
     val currentLocation = mutableStateOf<Location?>(null)
 
-    // Function to request location access
-    suspend fun requestLocationAccess(): Boolean {
-        return if (hasLocationPermission()) {
-            startLocationUpdates()
-            true
-        } else {
-            false // Permissions not granted; return false
-        }
-    }
 
-    // Check for location permissions
-    private fun hasLocationPermission(): Boolean {
+    // Function to check if location permission is granted
+    fun hasLocationPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -47,6 +36,7 @@ class LocationManager (
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // Function to start location updates
     fun startLocationUpdates() {
         if (hasLocationPermission()) {
             try {
@@ -70,16 +60,14 @@ class LocationManager (
                     null
                 )
             } catch (e: SecurityException) {
-                // Handle the security exception if permissions aren't granted
                 Log.e("LocationManager", "Permission not granted: ${e.message}")
             }
         } else {
-            // You might want to request permission here if it's not granted
             Log.e("LocationManager", "Location permission not granted.")
         }
     }
 
-    // Stop location updates
+    // Function to stop location updates
     fun stopLocationUpdates() {
         locationCallback?.let {
             fusedLocationClient.removeLocationUpdates(it)

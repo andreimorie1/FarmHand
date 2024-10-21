@@ -1,6 +1,9 @@
 package com.example.farmhand.weather.screens
 
+import android.Manifest
 import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,26 +36,44 @@ fun WeatherScreen(
 ) {
 
     val locationManager = remember { LocationManager(context) } // Initialize LocationManager
+    var hasLocationPermission by remember { mutableStateOf(locationManager.hasLocationPermission()) }
     val currentLocation by remember { locationManager.currentLocation }
 
     val apiKey = "6fdf4fe4fd4831597e9eedf198a0eeaa"
     val isFetchingData by viewModel.isFetchingData.collectAsState()
+    var hasFetchedWeatherData by remember { mutableStateOf(false) }
 
-    /*
-                    apiKey,
-                currentLocation?.latitude.toString(),
-                currentLocation?.longitude.toString()
-     */
-    LaunchedEffect(Unit) {
-        if (locationManager.requestLocationAccess()) {
-            viewModel.fetchCurrentWeatherByCoordinates(
-                longitude = currentLocation?.longitude ?:0.0,
-                latitude = currentLocation?.latitude ?:0.0,
-                apiKey = apiKey
-            )
+
+    // Permission launcher for location permission request
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasLocationPermission = isGranted
+        if (isGranted) {
+            locationManager.startLocationUpdates()
         }
     }
 
+    // Check and request location permission
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            locationManager.startLocationUpdates()
+        }
+    }
+
+    // Fetch weather data based on permission and location updates
+    LaunchedEffect(hasLocationPermission, currentLocation) {
+        if (hasLocationPermission && currentLocation != null && !hasFetchedWeatherData) {
+            viewModel.refreshWeatherData(
+                longitude = currentLocation?.longitude ?: 0.0,
+                latitude = currentLocation?.latitude ?: 0.0,
+                apiKey = apiKey
+            )
+            hasFetchedWeatherData = true // Set the flag to true to prevent further fetches
+        }
+    }
 
     PullToRefreshBox(
         isRefreshing = isFetchingData,

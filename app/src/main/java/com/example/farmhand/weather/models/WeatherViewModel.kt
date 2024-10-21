@@ -1,17 +1,24 @@
 package com.example.farmhand.weather.models
 
+
+import android.content.Context
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.farmhand.weather.api.WeatherRepository
 import com.example.farmhand.weather.api.data.CurrentWeather.CurrentWeatherResponse
 import com.example.farmhand.weather.api.data.FiveDayWeather.FiveDayWeatherResponse
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,13 +31,13 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import javax.inject.Inject
 
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
-    private val locationManager: LocationManager // Assuming you have a LocationManager or similar class
+    private val locationManager: LocationManager,
+    private val context: Context
 ) :
     ViewModel() {
 
@@ -41,8 +48,13 @@ class WeatherViewModel @Inject constructor(
     val isFetchingData: StateFlow<Boolean> = _isFetchingData
 
     init {
+        _isFetchingData.value = true
         observeFetchingState() // Start observing the isFetchingData state
+        _isFetchingData.value = false
+
     }
+
+
 
     // Function to observe fetching state and manage location updates accordingly
     private fun observeFetchingState() {
@@ -64,6 +76,7 @@ class WeatherViewModel @Inject constructor(
         // Fetch data
         viewModelScope.launch {
             try {
+                observeFetchingState()
                 // Fetch current weather and forecast
                 fetchCurrentWeatherByCoordinates(
                     latitude = latitude,
@@ -103,7 +116,7 @@ class WeatherViewModel @Inject constructor(
                 currentWeatherData = it
                 errorMessage = null
             }.onFailure {
-                Log.e("WeatherViewModel", "Error fetching weather: ${it}")
+                Log.e("WeatherViewModel", "Error fetching weather: $it")
                 handleFetchError(it)
             }.also {
                 delay(1000)
