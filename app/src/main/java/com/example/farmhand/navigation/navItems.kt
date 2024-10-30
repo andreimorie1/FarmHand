@@ -21,7 +21,7 @@ sealed class NavItems(
         badgeNum = 0
     )
     object Weather : NavItems(
-        route = "weather",
+        route = "module_weather",
         title = "Weather",
         selectedIcon = R.drawable.cloudy_snowy_fill,
         unselectedIcon = R.drawable.cloudy_snowy_outline,
