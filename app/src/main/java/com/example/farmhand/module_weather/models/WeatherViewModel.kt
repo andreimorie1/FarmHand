@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.farmhand.module_weather.api.WeatherRepository
 import com.example.farmhand.module_weather.api.data.CurrentWeather.CurrentWeatherResponse
 import com.example.farmhand.module_weather.api.data.FiveDayWeather.FiveDayWeatherResponse
+import com.example.farmhand.module_weather.api.data.ThirtyDayWeather.ThirtyDayForecastResponse
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,7 @@ class WeatherViewModel @Inject constructor(
 
     var currentWeatherData: CurrentWeatherResponse? by mutableStateOf(null)
     var fiveDayForecastData: FiveDayWeatherResponse? by mutableStateOf(null)
+    var thirtyDayForecastData: ThirtyDayForecastResponse? by mutableStateOf(null)
     var errorMessage: String? by mutableStateOf(null)
     private val _isFetchingData = MutableStateFlow(false)
     val isFetchingData: StateFlow<Boolean> = _isFetchingData
@@ -57,43 +59,51 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun refreshWeatherData(latitude: Double, longitude: Double, apiKey: String) {
-        // Set fetching state to true before starting the fetch
         _isFetchingData.value = true
-        // Fetch data
+
         viewModelScope.launch {
             try {
                 observeFetchingState()
-                // Fetch current module_weather and forecast
                 fetchCurrentWeatherByCoordinates(
                     latitude = latitude,
                     longitude = longitude,
-                    apiKey
+                    apiKey = apiKey
                 )
                 fetchFiveDayForecastByCoordinates(
                     latitude = latitude,
                     longitude = longitude,
-                    apiKey
+                    apiKey = apiKey
+                )
+                fetchThirtyDayForecastByCoordinates(
+                    latitude = latitude,
+                    longitude = longitude,
+                    apiKey = apiKey
                 )
             } catch (e: Exception) {
-                Log.d("WeatherViewModel", "Refresh module_weather for lat: $latitude, lon: $longitude")
+                Log.d(
+                    "WeatherViewModel", "Refresh module_weather for lat: $latitude, lon: $longitude"
+                )
 
-                // Handle any errors
                 errorMessage = e.message
             } finally {
-                // Reset fetching state after the data has been fetched
+
                 delay(1000)
                 _isFetchingData.value =
-                    false // Set fetching status to false after the API call completes
+                    false
             }
         }
     }
 
 
     // get CurrentWeather Response
-    private fun fetchCurrentWeatherByCoordinates(latitude: Double, longitude: Double, apiKey: String) {
+    private fun fetchCurrentWeatherByCoordinates(
+        latitude: Double,
+        longitude: Double,
+        apiKey: String
+    ) {
         Log.d("WeatherViewModel", "Fetching module_weather for lat: $latitude, lon: $longitude")
 
-        _isFetchingData.value = true // Set fetching status to true before starting the API call
+        _isFetchingData.value = true
 
         viewModelScope.launch {
             val result = repository.getCurrentWeather(latitude, longitude, apiKey)
@@ -107,16 +117,48 @@ class WeatherViewModel @Inject constructor(
             }.also {
                 delay(1000)
                 _isFetchingData.value =
-                    false // Set fetching status to false after the API call completes
+                    false
+            }
+        }
+    }
+
+    // get Thirty Day Forecast Response
+
+    private fun fetchThirtyDayForecastByCoordinates (
+        latitude: Double,
+        longitude: Double,
+        apiKey: String
+    ) {
+        Log.d("WeatherViewModel", "Fetching 30-day climactic forecast for lat: $latitude, lon: $longitude")
+
+        _isFetchingData.value = true
+
+        viewModelScope.launch {
+            val result = repository.getClimacticForecasts(latitude, longitude, apiKey)
+            result.onSuccess {
+                Log.d("WeatherViewModel", "30-day climactic forecast data received: $it")
+                thirtyDayForecastData = it
+                errorMessage = null
+            }.onFailure {
+                Log.e("WeatherViewModel", "Error fetching 30-day climactic forecast: ${it}")
+                handleFetchError(it)
+            }.also {
+                delay(1000)
+                _isFetchingData.value =
+                    false
             }
         }
     }
 
     //  get Five Day Forecast Response
-    private fun fetchFiveDayForecastByCoordinates(latitude: Double, longitude: Double, apiKey: String) {
+    private fun fetchFiveDayForecastByCoordinates(
+        latitude: Double,
+        longitude: Double,
+        apiKey: String
+    ) {
         Log.d("WeatherViewModel", "Fetching 5-day forecast for lat: $latitude, lon: $longitude")
 
-        _isFetchingData.value = true // Set fetching status to true before starting the API call
+        _isFetchingData.value = true
 
         viewModelScope.launch {
             val result = repository.getFiveDayForecast(latitude, longitude, apiKey)
@@ -130,7 +172,7 @@ class WeatherViewModel @Inject constructor(
             }.also {
                 delay(1000)
                 _isFetchingData.value =
-                    false // Set fetching status to false after the API call completes
+                    false
             }
         }
     }

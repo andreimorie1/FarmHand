@@ -27,7 +27,7 @@ fun NavGraph(navController: NavHostController) {
             MainAppScaffold(navController) { innerNavController ->
                 NavHost(
                     navController = innerNavController,
-                    startDestination = NavItems.Home.route // Default tab
+                    startDestination = NavItems.Weather.route // Default tab
                 ) {
                     composable(route = NavItems.Home.route) {
                         HomeScreen()

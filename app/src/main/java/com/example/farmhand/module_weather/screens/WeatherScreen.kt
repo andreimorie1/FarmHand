@@ -27,11 +27,11 @@ fun WeatherScreen(
     context: Context = LocalContext.current
 ) {
 
-    val locationManager = remember { LocationManager(context) } // Initialize LocationManager
+    val locationManager = remember { LocationManager(context) }
     var hasLocationPermission by remember { mutableStateOf(locationManager.hasLocationPermission()) }
     val currentLocation by remember { locationManager.currentLocation }
 
-    val apiKey = "6fdf4fe4fd4831597e9eedf198a0eeaa"
+    val apiKey = "5e970ffe1ccf427cc2885d907f84e683"
     val isFetchingData by viewModel.isFetchingData.collectAsState()
     var hasFetchedWeatherData by remember { mutableStateOf(false) }
 
@@ -87,9 +87,8 @@ fun WeatherScreen(
     ) {
         WeatherContent(
             isFetchingData = isFetchingData,
-            viewModel = viewModel,
             currentWeatherData = viewModel.currentWeatherData,
-            fiveDayForecastData = viewModel.fiveDayForecastData,
+            thirtyDayForecastData = viewModel.thirtyDayForecastData,
             errorMessage = viewModel.errorMessage,
         )
     }
