@@ -88,7 +88,7 @@ dependencies {
 
     debugImplementation(libs.ui.tooling)
 
-    //retrofit
+        //retrofit
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation(libs.coil.compose)
@@ -101,5 +101,8 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.androidx.lifecycle.runtime.ktx.v262)
+
+    implementation(libs.coil.compose) // Update to latest version as needed
+
 
 }

@@ -4,15 +4,16 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    object KindwiseRetrofitClient {
-        private const val BASE_URL = "https://crop.kindwise.com/api/v1/"
+    private const val USE_MOCK = true  // Set to true to use MockKindwiseApiService
 
-        private val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+    val kindwiseApiService: KindwiseApiService = if (USE_MOCK) {
+        MockKindwiseApiService()
+    } else {
+        Retrofit.Builder()
+            .baseUrl("https://crop.kindwise.com/api/v1/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-
-        //val kindwiseApiService: KindwiseApiService = retrofit.create(KindwiseApiService::class.java)
+            .create(KindwiseApiService::class.java)
     }
 }
 
