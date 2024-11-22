@@ -1,0 +1,93 @@
+[33mcommit 03b50e85557656e6c92fc5c7212c9565c3ab7a55[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Nov 6 14:03:51 2024 +0800
+
+    Weather
+
+[33mcommit 1aaae1ff95fc870657acf70d7f2a01f21440b426[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Mon Nov 4 21:01:48 2024 +0800
+
+    Weather
+
+[33mcommit 3264455f2f42a1e182b7c4153c21962aa611c4a2[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Oct 30 13:29:17 2024 +0800
+
+    Recommendation done
+
+[33mcommit 0e1c77ab9d8136b22ff4de48a0583fe8c554e15a[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Mon Oct 21 14:30:17 2024 +0800
+
+    Recommendation code
+
+[33mcommit af6f30cf7cd42d6fd43028df08184544ba198534[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Oct 16 13:12:21 2024 +0800
+
+    temp-branch commit
+
+[33mcommit 9803ed9cb3a7bb49999e2a8e44b42cf5f64c344c[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Tue Oct 15 14:27:22 2024 +0800
+
+    Weather:
+    location,
+    API calling(current, five day)
+
+[33mcommit de7adc914c6472589e4507f0a467457a95204a7e[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Sep 25 06:07:24 2024 +0800
+
+    Authentication & User AccountModule 100%
+
+[33mcommit 2db4803be9de390bc34f6ba75d84ec8e9c4d8ba8[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Sep 25 06:04:08 2024 +0800
+
+    Authentication & User AccountModule 100%
+
+[33mcommit 45fd7de0caa19984ed8e686720c26b75a9750fdb[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Sep 25 05:55:51 2024 +0800
+
+    Authentication & User AccountModule 100%
+
+[33mcommit 75035f69336d0ed28f9d79678eb1056c24e5912b[m[33m ([m[1;31morigin/testing1[m[33m)[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Mon Sep 23 22:58:14 2024 +0800
+
+    Login/Register Completed
+    User AccountModule 70%
+
+[33mcommit 57d92161c4b5362a1891a7eebb8d11e768cb3560[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Sep 18 15:40:01 2024 +0800
+
+    User Account Model
+    TextField Errors
+
+[33mcommit 434f3040a1c99988526cfeafb6a86fc02712a668[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Sun Sep 8 14:46:17 2024 +0800
+
+    database register
+
+[33mcommit ca355e1a9e328eb9d2c8126d80ec3347643e26bc[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Fri Sep 6 10:28:35 2024 +0800
+
+    testin 1 Commit
+
+[33mcommit ecd64b43646feaf521d1cf8f881eb787d68ac2f8[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Sep 4 14:35:55 2024 +0800
+
+    Scaffold bottom nav basic func
+
+[33mcommit 3f14d4199459d49e661c45b513a54220f97cafcf[m
+Author: andreimorie1 <andreimorie@gmail.com>
+Date:   Wed Aug 28 22:30:43 2024 +0800
+
+    Initial push (authScreen)

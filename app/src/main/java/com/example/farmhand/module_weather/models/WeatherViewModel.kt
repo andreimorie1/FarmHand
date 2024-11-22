@@ -7,7 +7,9 @@ import javax.inject.Inject
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.farmhand.module_weather.api.WeatherRepository
@@ -26,9 +28,14 @@ import java.net.UnknownHostException
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
     private val locationManager: LocationManager,
-    private val context: Context
-) :
-    ViewModel() {
+) : ViewModel() {
+
+
+    var hasLocationPermission by mutableStateOf(locationManager.hasLocationPermission())
+        private set
+
+    var currentLocation by mutableStateOf(locationManager.currentLocation)
+        private set
 
     var currentWeatherData: CurrentWeatherResponse? by mutableStateOf(null)
     var fiveDayForecastData: FiveDayWeatherResponse? by mutableStateOf(null)
@@ -41,7 +48,14 @@ class WeatherViewModel @Inject constructor(
         _isFetchingData.value = true
         observeFetchingState() // Start observing the isFetchingData state
         _isFetchingData.value = false
+    }
 
+    fun startLocationUpdates() {
+        locationManager.startLocationUpdates()
+    }
+
+    fun stopLocationUpdates() {
+        locationManager.stopLocationUpdates()
     }
 
     // Function to observe fetching state and manage location updates accordingly
@@ -65,11 +79,6 @@ class WeatherViewModel @Inject constructor(
             try {
                 observeFetchingState()
                 fetchCurrentWeatherByCoordinates(
-                    latitude = latitude,
-                    longitude = longitude,
-                    apiKey = apiKey
-                )
-                fetchFiveDayForecastByCoordinates(
                     latitude = latitude,
                     longitude = longitude,
                     apiKey = apiKey

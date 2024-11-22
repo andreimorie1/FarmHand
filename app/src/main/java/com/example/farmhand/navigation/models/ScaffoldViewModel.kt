@@ -7,7 +7,6 @@ import com.example.farmhand.navigation.NavItems
 
 class ScaffoldViewModel : ViewModel() {
     val navItems = listOf(
-        NavItems.Home,
         NavItems.Weather,
         NavItems.PlantHealth,
         NavItems.Account

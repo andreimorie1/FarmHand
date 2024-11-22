@@ -16,4 +16,3 @@ object RetrofitClient {
             .create(KindwiseApiService::class.java)
     }
 }
-

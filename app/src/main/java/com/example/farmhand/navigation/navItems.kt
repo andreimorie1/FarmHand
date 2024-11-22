@@ -12,14 +12,6 @@ sealed class NavItems(
     val hasBadge: Boolean,
     val badgeNum: Int
 ) {
-    object Home : NavItems(
-        route = "home",
-        title = "Home",
-        selectedIcon = R.drawable.home_fill,
-        unselectedIcon = R.drawable.home_outline,
-        hasBadge = false,
-        badgeNum = 0
-    )
     object Weather : NavItems(
         route = "module_weather",
         title = "Weather",

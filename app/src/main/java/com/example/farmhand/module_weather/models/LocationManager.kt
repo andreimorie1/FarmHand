@@ -24,14 +24,6 @@ class LocationManager @Inject constructor(
     // State to hold the current location
     val currentLocation = mutableStateOf<Location?>(null)
 
-    // checks if Location/Gps is on
-    fun isLocationEnabled(): Boolean {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
-
-
     // Function to check if location permission is granted
     fun hasLocationPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(

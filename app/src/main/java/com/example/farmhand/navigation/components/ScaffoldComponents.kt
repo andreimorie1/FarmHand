@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.farmhand.module_weather.models.WeatherViewModel
+import com.example.farmhand.navigation.NavItems
 import com.example.farmhand.navigation.models.ScaffoldViewModel
 import com.example.farmhand.ui.theme.Typography
 
@@ -32,7 +34,8 @@ fun NavIcon(
 
 @Composable
 fun MainAppScaffold(
-    navController: NavHostController,
+    //navController: NavHostController,
+    weatherViewModel: WeatherViewModel,
     content: @Composable (NavHostController) -> Unit // Expecting a NavHostController for inner screens){}){}
 ) {
     val scaffoldModel = ScaffoldViewModel()
@@ -47,6 +50,7 @@ fun MainAppScaffold(
                         selected = bottomNavState == index,
                         onClick = {
                             scaffoldModel.updateBottomNavState(index)
+
                             innerNavController.navigate(navItemState.route) {
                                 popUpTo(innerNavController.graph.startDestinationId) {
                                     saveState = true
