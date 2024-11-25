@@ -29,12 +29,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.example.farmhand.module_Reco.API.data.Message
 import com.example.farmhand.module_Reco.API.data.OpenAiRequest
 import com.example.farmhand.module_Reco.model.OpenAiViewModel
 import com.example.farmhand.module_health.models.KindwiseViewModel
@@ -191,7 +192,7 @@ fun IdentificationScreen(
                     )
                     Button(
                         onClick = {
-                            DeleteImageFromDevice(context, uri)
+                            deleteImageFromDevice(context, uri)
                             // Remove the URI from the list after deletion
                             imageUris.value -= uri
                         },
@@ -206,7 +207,7 @@ fun IdentificationScreen(
 }
 
 // Function to delete the image from the device
-fun DeleteImageFromDevice(context: Context, uri: Uri) {
+fun deleteImageFromDevice(context: Context, uri: Uri) {
     try {
         context.contentResolver.delete(uri, null, null)
         Log.d("IdentificationScreen", "Image deleted successfully, URI: $uri")
@@ -267,16 +268,15 @@ fun TutorialColumn() {
 @Composable
 fun CapturedData(
     kindwiseViewModel: KindwiseViewModel,
-    OpenAiViewModel: OpenAiViewModel,
-    WeatherViewModel: WeatherViewModel
+    openAiViewModel: OpenAiViewModel,
+    weatherViewModel: WeatherViewModel
 ) {
 
-    var WeatherData = WeatherViewModel.currentWeatherData
+    val weatherData = weatherViewModel.currentWeatherData
     val currentIdentificationData = kindwiseViewModel.currentIdentificationData
 
-
-    val isLoading by OpenAiViewModel.isFetchingData.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
+    val openAiResponse = openAiViewModel.openAiResponse
+    val responseText = openAiViewModel.responseText
 
     fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
@@ -310,6 +310,9 @@ fun CapturedData(
 
                 // Display disease suggestions
                 result.disease.suggestions.forEach { suggestion ->
+
+                    var showDialog by remember { mutableStateOf(false) }
+
                     Card(
                         modifier = Modifier
                             .wrapContentSize()
@@ -355,19 +358,17 @@ fun CapturedData(
                                 Button(
                                     onClick = {// CALL OPENAI!!
                                         showDialog = true
-                                        val request = OpenAiRequest(
-                                            prompt =
-"""You are an expert in Filipino agriculture and pest/disease management.
-                                                
-Current weather conditions:
-- Rain: ${WeatherData?.rain?.`1h` ?: 0.0}mm in the last hour
-- Temperature: ${WeatherData?.main?.temp}°C (feels like ${WeatherData?.main?.feels_like}°C)
-- Humidity: ${WeatherData?.main?.humidity}%
-- Wind Speed: ${WeatherData?.wind?.speed}m/s
+
+                                        val prompt =
+                                            """Current weather conditions:
+Rain: ${weatherData?.rain?.`1h` ?: 0.0}mm in the last hour
+Temperature: ${weatherData?.main?.temp}°C (feels like ${weatherData?.main?.feels_like}°C)
+Humidity: ${weatherData?.main?.humidity}%
+Wind Speed: ${weatherData?.wind?.speed}m/s
 
 Identified crop:
-- Name: ${result.crop.suggestions.firstOrNull()?.name} (scientific name: ${result.crop.suggestions.firstOrNull()?.scientific_name})
-- Disease/Pest: ${suggestion.name} (scientific name: ${suggestion.scientific_name})
+Name: ${result.crop.suggestions.firstOrNull()?.name} (scientific name: ${result.crop.suggestions.firstOrNull()?.scientific_name})
+Disease/Pest: ${suggestion.name} (scientific name: ${suggestion.scientific_name})
 
 Consider the following when recommending control measures:
 1. The weather conditions (rain, temperature, humidity, wind speed) and how they affect pest behavior and disease spread in tropical climates like the Philippines.
@@ -380,8 +381,19 @@ Weather Considerations: How the current weather affects pest behavior and diseas
 Additional Notes: Any relevant local practices or methods.
 
 Based on the current weather conditions and the crop health status, please take your time to carefully consider and recommend the most appropriate control measures for the identified disease/pest, tailored to the farming conditions in the Philippines."""
+                                                .trimIndent()
+                                        val messages = listOf(
+                                            Message(
+                                                role = "system",
+                                                content = "You are an expert in Filipino agriculture and pest/disease management."
+                                            ),
+                                            Message(role = "user", content = prompt)
                                         )
-                                        OpenAiViewModel.createCompletion(request = request)
+                                        val request = OpenAiRequest(
+                                            messages = messages,
+                                        )
+
+                                        openAiViewModel.createCompletion(request = request)
                                     }
                                 ) {
                                     Text("See Solutions")
@@ -389,7 +401,6 @@ Based on the current weather conditions and the crop health status, please take 
                             }
                         }
                     }
-
                     CustomDialog(
                         showDialog = showDialog,
                         onDismiss = { showDialog = false },
@@ -415,13 +426,25 @@ Based on the current weather conditions and the crop health status, please take 
                             }
                         },
                         bodyContent = {
-                            ""
+                            Column(modifier = Modifier) {
+                                // Show loading indicator if fetching data
+                                if (openAiViewModel.isFetchingData) {
+                                    CircularProgressIndicator() // Show loading state
+                                } else if (openAiViewModel.responseText != null) {
+                                    // Display the OpenAI response text
+                                    Text(text = responseText ?: "No response received")
+                                } else {
+                                    // Handle error state or no data
+                                    Text(text = "Error or no response.")
+                                }
+                            }
                         },
                         confirmButtonText = "close"
                     )
+
                 }
             }
-        } ?: Text(text = "Result will appear here", style = MaterialTheme.typography.bodyLarge)
+        } ?: Text(text = "Unknown error", style = MaterialTheme.typography.bodyLarge)
     }
 }
 

@@ -90,7 +90,7 @@ fun PlantHealthScreen(
         }
 
         if (KindwiseViewModel.currentIdentificationData != null) {
-            CapturedData(KindwiseViewModel, OpenAiViewModel = OpenAiViewModel, WeatherViewModel = weatherViewModel)
+            CapturedData(KindwiseViewModel, openAiViewModel = OpenAiViewModel, weatherViewModel = weatherViewModel)
         }
     }
 }

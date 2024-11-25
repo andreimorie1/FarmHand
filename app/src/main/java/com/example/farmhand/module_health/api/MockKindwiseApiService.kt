@@ -64,6 +64,34 @@ class MockKindwiseApiService : KindwiseApiService {
 
                             ),
                             details = Details(language = "en", entity_id = "b9ec757fefb92520")
+                        ),
+                        SuggestionX(
+                            id = "b9ec757fefb92520",
+                            name = "Rice Blastooo",
+                            probability = 0.980698,
+                            scientific_name = "Magnaporthe oryzaearrr",
+                            similar_images = listOf(
+                                SimilarImageX(
+                                    id = "100ac65780f4761e7bfd42b8db30fd1ec36fc5e8",
+                                    url = "https://crop-health.ams3.cdn.digitaloceanspaces.com/similar_images/1/100/ac65780f4761e7bfd42b8db30fd1ec36fc5e8.jpg",
+                                    url_small = "https://crop-health.ams3.cdn.digitaloceanspaces.com/similar_images/1/100/ac65780f4761e7bfd42b8db30fd1ec36fc5e8.small.jpg",
+                                    similarity = 0.789,
+                                    license_name = "CC BY 3.0",
+                                    license_url = "https://creativecommons.org/licenses/by/3.0/",
+                                    citation = "Howard F. Schwartz, Colorado State University"
+                                ),
+                                SimilarImageX(
+                                    id = "111fe91bae90b085eff701f6d57cfba7cebc8412",
+                                    url = "https://crop-health.ams3.cdn.digitaloceanspaces.com/similar_images/1/111/fe91bae90b085eff701f6d57cfba7cebc8412.jpg",
+                                    url_small = "https://crop-health.ams3.cdn.digitaloceanspaces.com/similar_images/1/111/fe91bae90b085eff701f6d57cfba7cebc8412.small.jpg",
+                                    similarity = 0.756,
+                                    license_name = "ac65780f4761e7bfd42b8db30fd1ec36fc5e8.jpg",
+                                    license_url = "https://creativecommons.org/licenses/by/3.0/",
+                                    citation = "Howard F. Schwartz, Colorado State University"
+                                )
+
+                            ),
+                            details = Details(language = "en", entity_id = "b9ec757fefb92520")
                         )
                     )
                 ),

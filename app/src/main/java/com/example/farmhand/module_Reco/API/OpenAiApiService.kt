@@ -9,7 +9,7 @@ import retrofit2.http.POST
 interface OpenAiApiService {
 
     // Example of creating a text completion request to OpenAI API
-    @POST("completions")
+    @POST("chat/completions")
     suspend fun createCompletion(
         @Header("Authorization") authorization: String, // Bearer token
         @Body request: OpenAiRequest

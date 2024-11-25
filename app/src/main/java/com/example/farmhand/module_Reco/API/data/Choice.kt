@@ -1,8 +1,8 @@
 package com.example.farmhand.module_Reco.API.data
 
 data class Choice(
-    val text: String,
+    val message: Message,
     val index: Int,
-    val logprobs: Any?,
+    val logprobs: Any? = null,
     val finish_reason: String
 )
