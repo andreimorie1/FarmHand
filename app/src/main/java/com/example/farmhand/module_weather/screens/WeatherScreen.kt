@@ -46,6 +46,13 @@ fun WeatherScreen(
         }
     }
 
+    //check if location has permission
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            locationManager.startLocationUpdates()
+        }
+    }
+
     // Check and request location permission
     LaunchedEffect(Unit) {
         if (viewModel.fiveDayForecastData == null && viewModel.currentWeatherData == null) {

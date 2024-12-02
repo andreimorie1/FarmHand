@@ -20,9 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.AlertDialog
@@ -52,6 +55,7 @@ import com.example.farmhand.module_Reco.model.OpenAiViewModel
 import com.example.farmhand.module_health.models.KindwiseViewModel
 import com.example.farmhand.module_weather.models.WeatherViewModel
 import com.example.farmhand.ui.theme.Typography
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 /*
 1. IdentificationScreen
@@ -87,7 +91,7 @@ fun IdentificationScreen(
     ) { success ->
         if (success) {
             tempImageUri.value?.let {
-                imageUris.value += it // Append captured URI
+                imageUris.value += it // Append the captured URI
                 onImageCapture(imageUris.value)
                 Log.d("IdentificationScreen", "Image captured successfully, URI: $it")
             } ?: Log.d("IdentificationScreen", "No image URI found after capture")
@@ -95,7 +99,6 @@ fun IdentificationScreen(
             Log.d("IdentificationScreen", "Image capture failed")
         }
     }
-
 
     // Dialog or buttons to choose between camera and gallery
     var showDialog by remember { mutableStateOf(false) }
@@ -125,9 +128,12 @@ fun IdentificationScreen(
                         showDialog = false
                         // Set up the content values for storing the image in MediaStore
                         val contentValues = ContentValues().apply {
-                            put(MediaStore.Images.Media.DISPLAY_NAME, "captured_image.jpg")
+                            put(
+                                MediaStore.Images.Media.DISPLAY_NAME,
+                                "captured_image_${System.currentTimeMillis()}.jpg"
+                            )
                             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp")
+                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp/.private")
                         }
 
                         // Insert a new image entry and retrieve the URI
@@ -206,13 +212,18 @@ fun IdentificationScreen(
     }
 }
 
-// Function to delete the image from the device
-fun deleteImageFromDevice(context: Context, uri: Uri) {
+// Helper function to delete an image from the device
+private fun deleteImageFromDevice(context: Context, uri: Uri) {
     try {
-        context.contentResolver.delete(uri, null, null)
-        Log.d("IdentificationScreen", "Image deleted successfully, URI: $uri")
+        // Delete the image from MediaStore using ContentResolver
+        val deleted = context.contentResolver.delete(uri, null, null)
+        if (deleted > 0) {
+            Log.d("IdentificationScreen", "Image deleted successfully: $uri")
+        } else {
+            Log.e("IdentificationScreen", "Failed to delete image: $uri")
+        }
     } catch (e: Exception) {
-        Log.e("IdentificationScreen", "Failed to delete image: $uri", e)
+        Log.e("IdentificationScreen", "Error while deleting image: ${e.message}")
     }
 }
 
@@ -288,7 +299,7 @@ fun CapturedData(
         Text(
             text = "Plant Health Analysis",
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 2.dp)
         )
 
         currentIdentificationData?.result?.let { result ->
@@ -303,14 +314,22 @@ fun CapturedData(
                     } else {
                         "No plant detected"
                     },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,   //if (result.is_plant.binary) Color.Green else Color.Red,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+                Text(
+                    text = if (result.is_plant.binary) {
+                        "Detected Plant: ${result.crop.suggestions.firstOrNull()?.name}"
+                    } else {
+                        "No plant detected"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-
                 // Display disease suggestions
                 result.disease.suggestions.forEach { suggestion ->
-
                     var showDialog by remember { mutableStateOf(false) }
 
                     Card(
@@ -355,12 +374,7 @@ fun CapturedData(
                                     .padding(top = 4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Button(
-                                    onClick = {// CALL OPENAI!!
-                                        showDialog = true
-
-                                        val prompt =
-                                            """Current weather conditions:
+                                val unhealthyPrompt = """Current weather conditions:
 Rain: ${weatherData?.rain?.`1h` ?: 0.0}mm in the last hour
 Temperature: ${weatherData?.main?.temp}°C (feels like ${weatherData?.main?.feels_like}°C)
 Humidity: ${weatherData?.main?.humidity}%
@@ -375,13 +389,41 @@ Consider the following when recommending control measures:
 2. Local agricultural practices for pest and disease management, including organic and chemical methods, as well as integrated pest management strategies.
 
 Please format the response as follows:
-Summary: A brief description of the disease/pest and how it relates to the weather.
+Details of the Pest/Disease: symptoms, effects, lifecycle spread (if relevant), and how it relates to the weather.
 Control Measures: A list of actionable steps (in bullet points).
 Weather Considerations: How the current weather affects pest behavior and disease spread in the Philippines.
 Additional Notes: Any relevant local practices or methods.
 
 Based on the current weather conditions and the crop health status, please take your time to carefully consider and recommend the most appropriate control measures for the identified disease/pest, tailored to the farming conditions in the Philippines."""
-                                                .trimIndent()
+                                    .trimIndent()
+                                val healthyPrompt = """Current weather conditions:
+Rain: ${weatherData?.rain?.`1h` ?: 0.0}mm in the last hour
+Temperature: ${weatherData?.main?.temp}°C (feels like ${weatherData?.main?.feels_like}°C)
+Humidity: ${weatherData?.main?.humidity}%
+Wind Speed: ${weatherData?.wind?.speed}m/s
+
+Identified crop:
+Name: ${result.crop.suggestions.firstOrNull()?.name} (scientific name: ${result.crop.suggestions.firstOrNull()?.scientific_name})
+
+Your plants are healthy! Please consider the following preventive measures to maintain their health:
+
+1. The weather conditions (rain, temperature, humidity, wind speed) and how they might influence potential risks such as pest infestations, fungal diseases, or crop stress in tropical climates like the Philippines.
+2. Local agricultural best practices for preventive care, including fertilization schedules, irrigation, and seasonal adjustments.
+
+Please format the response as follows:
+Plant Health Status: A brief affirmation that the plants are in good condition.
+Preventive Maintenance: A list of best practices to maintain plant health (in bullet points).
+Weather Considerations: How the current weather may influence potential risks and how to adapt preventive measures.
+Additional Notes: Any relevant local farming techniques or cultural practices that promote plant health.
+
+Based on the current weather conditions and the healthy status of the crop, provide recommendations for continued maintenance and prevention tailored to tropical farming conditions in the Philippines."""
+                                    .trimIndent()
+                                Button(
+                                    onClick = {// CALL OPENAI!!
+                                        showDialog = true
+
+                                        val prompt = if (result.crop.suggestions.firstOrNull()?.name != "healthy") unhealthyPrompt else healthyPrompt
+
                                         val messages = listOf(
                                             Message(
                                                 role = "system",
@@ -401,6 +443,8 @@ Based on the current weather conditions and the crop health status, please take 
                             }
                         }
                     }
+                    //result.crop.suggestions.firstOrNull()?.scientific_name ?: ""  NAME OF DETECTED CROP
+                    //suggestion.name NAME OF DETECTED PEST/DISEASE
                     CustomDialog(
                         showDialog = showDialog,
                         onDismiss = { showDialog = false },
@@ -410,11 +454,23 @@ Based on the current weather conditions and the crop health status, please take 
                                     .fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(suggestion.name, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    suggestion.scientific_name,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
+                                if (suggestion.name == "healthy" || suggestion.name == "Healthy") {
+                                    Text(
+                                        "A healthy ${result.crop.suggestions.firstOrNull()?.name ?: ""}",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        result.crop.suggestions.firstOrNull()?.scientific_name ?: "",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                } else {
+                                    Text(suggestion.name, style = MaterialTheme.typography.titleMedium)
+
+                                    Text(
+                                        suggestion.scientific_name,
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+                                }
                                 HorizontalDivider(
                                     thickness = 1.dp,
                                     modifier = Modifier.padding(
@@ -426,13 +482,30 @@ Based on the current weather conditions and the crop health status, please take 
                             }
                         },
                         bodyContent = {
-                            Column(modifier = Modifier) {
+                            val scrollState = rememberScrollState()
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .verticalScroll(scrollState),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 // Show loading indicator if fetching data
                                 if (openAiViewModel.isFetchingData) {
+                                    Text(
+                                        text = "Fetching data...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
                                     CircularProgressIndicator() // Show loading state
                                 } else if (openAiViewModel.responseText != null) {
                                     // Display the OpenAI response text
-                                    Text(text = responseText ?: "No response received")
+                                    MarkdownText(
+                                        markdown = responseText ?: "No response received",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
                                 } else {
                                     // Handle error state or no data
                                     Text(text = "Error or no response.")
@@ -441,7 +514,6 @@ Based on the current weather conditions and the crop health status, please take 
                         },
                         confirmButtonText = "close"
                     )
-
                 }
             }
         } ?: Text(text = "Unknown error", style = MaterialTheme.typography.bodyLarge)

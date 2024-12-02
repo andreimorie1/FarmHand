@@ -102,7 +102,10 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.runtime.ktx.v262)
 
-    implementation(libs.coil.compose) // Update to latest version as needed
+    implementation(libs.coil.compose)
+
+    //Markdown format OpenAI's response
+    implementation (libs.compose.markdown)
 
 
 }

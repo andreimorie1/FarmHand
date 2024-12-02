@@ -50,14 +50,6 @@ class WeatherViewModel @Inject constructor(
         _isFetchingData.value = false
     }
 
-    fun startLocationUpdates() {
-        locationManager.startLocationUpdates()
-    }
-
-    fun stopLocationUpdates() {
-        locationManager.stopLocationUpdates()
-    }
-
     // Function to observe fetching state and manage location updates accordingly
     private fun observeFetchingState() {
         viewModelScope.launch {

@@ -53,8 +53,7 @@ fun WeatherContent(
         when {
             currentWeatherData != null && thirtyDayForecastData != null -> {
                 val WeatherDetails = getCurrentWeatherDetails(currentWeatherData)
-                val recommendation =
-                    getWeatherRecommendation(currentWeatherResponse = currentWeatherData)
+                val recommendation = getWeatherRecommendation(currentWeatherResponse = currentWeatherData)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -156,7 +155,7 @@ fun WeatherContent(
                             horizontalAlignment = Alignment.Start
                         ) {
                             Text(
-                                "farming:",
+                                "Farming",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier
@@ -171,7 +170,7 @@ fun WeatherContent(
                             )
 
                             Text(
-                                "farmerHealth:",
+                                "Farmer Wellness & Safety",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier
@@ -186,7 +185,7 @@ fun WeatherContent(
                             )
 
                             Text(
-                                "pestManagement:",
+                                "Crop Protection",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier
@@ -203,13 +202,23 @@ fun WeatherContent(
                     }
                 }
             }
-
             errorMessage != null -> {
-                Text(text = "Error: $errorMessage")
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    Text(text = "Error: $errorMessage")
+                }
             }
-
             else -> {
-                Text(text = "No data available", modifier = Modifier.fillMaxSize())
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    Text(text = "No data available", modifier = Modifier.fillMaxSize())
+                }
             }
 
         }
