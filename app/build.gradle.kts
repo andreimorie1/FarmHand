@@ -107,5 +107,8 @@ dependencies {
     //Markdown format OpenAI's response
     implementation (libs.compose.markdown)
 
+    implementation("com.google.code.gson:gson:2.8.8")
+
+
 
 }

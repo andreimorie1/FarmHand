@@ -33,6 +33,7 @@ class uAccountModel @Inject constructor(
     private var _rePassword by mutableStateOf("")
     private var _userId by mutableIntStateOf(-1)
 
+/*
     init {
         viewModelScope.launch {
             val userId = AuthManager.getUserIdLoggedIn(context) // use AuthManager to get user ID
@@ -48,6 +49,7 @@ class uAccountModel @Inject constructor(
             _userId = _user.value?.uid ?: -1
         }
     }
+ */
 
     val userId: Int
         get() = _userId

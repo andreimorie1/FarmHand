@@ -15,17 +15,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.farmhand.module_weather.api.data.CurrentWeather.CurrentWeatherResponse
 import com.example.farmhand.module_weather.api.data.ThirtyDayWeather.ThirtyDayForecastResponse
-import com.example.farmhand.module_weather.models.LocationManager
 import com.example.farmhand.module_weather.utils.CurrentWeatherDetails
 import com.example.farmhand.module_weather.utils.ForecastLazyRow
 import com.example.farmhand.module_weather.utils.WeatherHeader
@@ -52,8 +48,20 @@ fun WeatherContent(
     } else {
         when {
             currentWeatherData != null && thirtyDayForecastData != null -> {
-                val WeatherDetails = getCurrentWeatherDetails(currentWeatherData)
-                val recommendation = getWeatherRecommendation(currentWeatherResponse = currentWeatherData)
+                val weatherDetails = getCurrentWeatherDetails(currentWeatherData)
+                val recommendation = getWeatherRecommendation(
+                    mainData = currentWeatherData.weather[0].main,
+                    windSpeedData = currentWeatherData.wind.speed,
+                    humidityData = currentWeatherData.main.humidity,
+                    visibilityData = currentWeatherData.visibility,
+                    rainData = currentWeatherData?.rain?.`1h` ?: 0.00,
+                    tempData = currentWeatherData.main.temp,
+                    airQualityData = currentWeatherData.weather.any {
+                        it.description.contains(
+                            "smoke"
+                        ) || it.description.contains("dust")
+                    }.toString()
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -115,7 +123,7 @@ fun WeatherContent(
                         // Weather Details Card
                         CurrentWeatherDetails(
                             currentWeatherData = currentWeatherData,
-                            WeatherDetails = WeatherDetails
+                            weatherDetails = weatherDetails
                         )
                     }
 

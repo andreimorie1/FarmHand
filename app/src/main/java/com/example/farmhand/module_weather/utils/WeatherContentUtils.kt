@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.farmhand.R
@@ -95,6 +96,18 @@ fun InfoCard(icon: Int?, header: String, message: String, dataval: String) {
                         // Empty Icon
                     }
 
+                    R.drawable.weather_data_visibility -> {
+                        Icon(
+                            painter = painterResource(id = icon),
+                            contentDescription = "Humidity Icon",
+                            modifier = Modifier.size(35.dp))
+                    }
+                    R.drawable.weather_data_humidity -> {
+                        Icon(
+                            painter = painterResource(id = icon),
+                            contentDescription = "Humidity Icon",
+                            modifier = Modifier.size(35.dp))
+                    }
                     else -> {
                         Icon(
                             painter = painterResource(id = icon),
@@ -204,10 +217,9 @@ data class ThirtyDayWeatherDetails(
 fun getCurrentWeatherDetails(
     currentWeatherData: CurrentWeatherResponse?,
 ): WeatherDetails {
-    val currentWeather = currentWeatherData
 
     // Feels Like description
-    val feelsLikeTemp = currentWeather?.main?.feels_like ?: 0.0
+    val feelsLikeTemp = currentWeatherData?.main?.feels_like ?: 0.0
     val feelsLikeMessage = when {
         feelsLikeTemp <= 15.0 -> "Cool"
         feelsLikeTemp <= 25.0 -> "Comfortable"
@@ -215,7 +227,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Visibility description
-    val visibility = currentWeather?.visibility ?: 0
+    val visibility = currentWeatherData?.visibility ?: 0
     val visibilityMessage = when {
         visibility >= 10000 -> "Good"
         visibility >= 5000 -> "Moderate"
@@ -223,7 +235,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Rain description
-    val rainAmount = currentWeather?.rain?.`1h` ?: 0.0
+    val rainAmount = currentWeatherData?.rain?.`1h` ?: 0.0
     val rainMessage = when {
         rainAmount == 0.0 -> "No rain"
         rainAmount <= 2.5 -> "Light"
@@ -232,7 +244,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Cloud description
-    val cloudCoverage = currentWeather?.clouds?.all ?: 0
+    val cloudCoverage = currentWeatherData?.clouds?.all ?: 0
     val cloudMessage = when {
         cloudCoverage <= 20 -> "Clear"
         cloudCoverage <= 50 -> "Partly Cloudy"
@@ -241,7 +253,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Wind description
-    val windSpeed = (currentWeather?.wind?.speed ?: 0.0) * 3.6 // Convert from m/s to km/h
+    val windSpeed = (currentWeatherData?.wind?.speed ?: 0.0) * 3.6 // Convert from m/s to km/h
     val windMessage = when {
         windSpeed <= 5.5 -> "Light"
         windSpeed <= 11.2 -> "Gentle"
@@ -250,7 +262,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Humidity description
-    val humidity = currentWeather?.main?.humidity ?: 0
+    val humidity = currentWeatherData?.main?.humidity ?: 0
     val humidityMessage = when {
         humidity <= 40 -> "Low"
         humidity <= 70 -> "Comfortable"
@@ -258,7 +270,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Sea Level Pressure description
-    val seaLevelPressure = currentWeather?.main?.sea_level ?: 0
+    val seaLevelPressure = currentWeatherData?.main?.sea_level ?: 0
     val seaLevelPressureMessage = when {
         seaLevelPressure <= 1000 -> "Low"
         seaLevelPressure <= 1020 -> "Normal"
@@ -266,7 +278,7 @@ fun getCurrentWeatherDetails(
     }
 
     // Air Pressure description
-    val airPressure = currentWeather?.main?.pressure ?: 0
+    val airPressure = currentWeatherData?.main?.pressure ?: 0
     val airPressureMessage = when {
         airPressure <= 1000 -> "Low"
         airPressure <= 1020 -> "Normal"
@@ -477,7 +489,7 @@ fun WeatherIcon(weather: String?, modifier: Modifier) {
             weather.contains("thunderstorm", ignoreCase = true) -> {
                 Icon(
                     painter = painterResource(id = R.drawable.weather_thunderstorm),  // Use the WbCloudy icon for rainy module_weather
-                    contentDescription = "Rainy Icon",
+                    contentDescription = "thunderstorm Icon",
                     modifier = modifier
                 )
             }
@@ -485,7 +497,7 @@ fun WeatherIcon(weather: String?, modifier: Modifier) {
             weather.contains("clouds", ignoreCase = true) -> {
                 Icon(
                     painter = painterResource(id = R.drawable.weather_clouds),  // Use the WbCloudy icon for rainy module_weather
-                    contentDescription = "Rainy Icon",
+                    contentDescription = "cloudy Icon",
                     modifier = modifier
                 )
             }
@@ -493,15 +505,7 @@ fun WeatherIcon(weather: String?, modifier: Modifier) {
             weather.contains("drizzle", ignoreCase = true) -> {
                 Icon(
                     painter = painterResource(id = R.drawable.weather_drizzle),  // Use the WbCloudy icon for rainy module_weather
-                    contentDescription = "Rainy Icon",
-                    modifier = modifier
-                )
-            }
-
-            weather.contains("thunderstorm", ignoreCase = true) -> {
-                Icon(
-                    painter = painterResource(id = R.drawable.weather_thunderstorm),  // Use the WbCloudy icon for rainy module_weather
-                    contentDescription = "Rainy Icon",
+                    contentDescription = "drizzle Icon",
                     modifier = modifier
                 )
             }
@@ -512,7 +516,7 @@ fun WeatherIcon(weather: String?, modifier: Modifier) {
                     weather.contains("fog", ignoreCase = true) ||
                     weather.contains("dust", ignoreCase = true) -> {
                 Icon(
-                    painter = painterResource(id = R.drawable.weather_mist),  // Use the WbCloudy icon for rainy module_weather
+                    painter = painterResource(id = R.drawable.weather_data_visibility),  // Use the WbCloudy icon for rainy module_weather
                     contentDescription = "Rainy Icon",
                     modifier = modifier
                 )
@@ -524,9 +528,9 @@ fun WeatherIcon(weather: String?, modifier: Modifier) {
 
 // 30 day forecast
 @Composable
-fun ForecastLazyRow(ThirtyDayForecastResponse: ThirtyDayForecastResponse) {
+fun ForecastLazyRow(thirtyDayForecastResponse: ThirtyDayForecastResponse) {
     LazyRow {
-        items(ThirtyDayForecastResponse.list) { forecastItem ->
+        items(thirtyDayForecastResponse.list) { forecastItem ->
             ForecastCard(forecastItem)
         }
     }
@@ -579,7 +583,7 @@ fun ForecastCard(forecastItem: Item0) {
 
                     Text(
                         forecastItem.weather.firstOrNull()?.description ?: "",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(Modifier.height(10.dp))
@@ -599,7 +603,7 @@ fun ForecastCard(forecastItem: Item0) {
     }
 
     if (showDialog) {
-        val WeatherDetails = getThirtyWeatherDetails(forecastItem)
+        val weatherDetails = getThirtyWeatherDetails(forecastItem)
 
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -630,8 +634,9 @@ fun ForecastCard(forecastItem: Item0) {
             text = {
                 Column(
                     modifier = Modifier
-                        .verticalScroll(rememberScrollState())
                         .fillMaxWidth()
+                        .height(320.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     Text(
                         text = "${forecastItem.weather.firstOrNull()?.main}. ${forecastItem.weather.firstOrNull()?.description}.",
@@ -652,23 +657,23 @@ fun ForecastCard(forecastItem: Item0) {
                         // col 1
                         Column {
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_data_humidity,
                                 header = "Humidity",
-                                message = WeatherDetails.humidityMessage,
+                                message = weatherDetails.humidityMessage,
                                 dataval = forecastItem.humidity.toString(),
                                 modifier = Modifier.weight(1f)
                             )
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_data_visibility,
                                 header = "Rain",
-                                message = WeatherDetails.rainMessage,
+                                message = weatherDetails.rainMessage,
                                 dataval = forecastItem.rain.toString(),
                                 modifier = Modifier.weight(1f)
                             )
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_clouds,
                                 header = "Cloud",
-                                message = WeatherDetails.cloudMessage,
+                                message = weatherDetails.cloudMessage,
                                 dataval = forecastItem.clouds.toString(),
                                 modifier = Modifier.weight(1f)
                             )
@@ -677,23 +682,23 @@ fun ForecastCard(forecastItem: Item0) {
                         // col 2
                         Column {
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_data_humidity,
                                 header = "Feels Like",
-                                message = WeatherDetails.humidityMessage,
+                                message = weatherDetails.humidityMessage,
                                 dataval = forecastItem.humidity.toString(),
                                 modifier = Modifier.weight(1f)
                             )
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_data_wind,
                                 header = "Wind",
-                                message = WeatherDetails.windMessage,
+                                message = weatherDetails.windMessage,
                                 dataval = forecastItem.speed.toString(),
                                 modifier = Modifier.weight(1f)
                             )
                             AlertInfoCard(
-                                icon = R.drawable.weather_clear,
+                                icon = R.drawable.weather_data_airpres,
                                 header = "Air Press.",
-                                message = WeatherDetails.airPressureMessage,
+                                message = weatherDetails.airPressureMessage,
                                 dataval = forecastItem.pressure.toString(),
                                 modifier = Modifier.weight(1f)
                             )
@@ -705,8 +710,6 @@ fun ForecastCard(forecastItem: Item0) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentSize()
-
                     ) {
                         Row(
                             modifier = Modifier
@@ -825,19 +828,19 @@ fun ForecastCard(forecastItem: Item0) {
                                 horizontalAlignment = Alignment.Start
                             ) {
                                 Text(
-                                    text = WeatherDetails.feelsLikeMessageMorn,
+                                    text = weatherDetails.feelsLikeMessageMorn,
                                     style = Typography.bodySmall
                                 )
                                 Text(
-                                    text = WeatherDetails.feelsLikeMessageDay,
+                                    text = weatherDetails.feelsLikeMessageDay,
                                     style = Typography.bodySmall
                                 )
                                 Text(
-                                    text = WeatherDetails.feelsLikeMessageEve,
+                                    text = weatherDetails.feelsLikeMessageEve,
                                     style = Typography.bodySmall
                                 )
                                 Text(
-                                    text = WeatherDetails.feelsLikeMessageNight,
+                                    text = weatherDetails.feelsLikeMessageNight,
                                     style = Typography.bodySmall
                                 )
                             }
@@ -869,6 +872,73 @@ fun ForecastCard(forecastItem: Item0) {
 
 
                         }
+                    }
+                    Spacer(Modifier.height(5.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        val recommendation = getWeatherRecommendation(
+                            mainData = forecastItem.weather[0].main,
+                            windSpeedData = forecastItem.speed,
+                            humidityData = forecastItem.humidity,
+                            visibilityData = 100,
+                            rainData = forecastItem.rain,
+                            tempData = forecastItem.temp.max,
+                            airQualityData = forecastItem.weather.any {
+                                it.description.contains(
+                                    "smoke"
+                                ) || it.description.contains("dust")
+                            }.toString()
+                        )
+                        Text(
+                            "Farming",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(start = 10.dp, top = 10.dp)
+                        )
+                        Text(
+                            recommendation.farming,
+                            style = MaterialTheme.typography.bodySmall.copy(textAlign = TextAlign.Left),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+
+                        Text(
+                            "Farmer Wellness & Safety",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(start = 10.dp, top = 10.dp)
+                        )
+                        Text(
+                            recommendation.farmerHealth,
+                            style = MaterialTheme.typography.bodySmall.copy(textAlign = TextAlign.Left),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+
+                        Text(
+                            "Crop Protection",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(start = 10.dp, top = 10.dp)
+                        )
+                        Text(
+                            recommendation.pestManagement,
+                            style = MaterialTheme.typography.bodySmall.copy(textAlign = TextAlign.Left),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
                     }
                 }
             },
@@ -948,7 +1018,7 @@ fun WeatherHeader(currentWeatherData: CurrentWeatherResponse?) {
 @Composable
 fun CurrentWeatherDetails(
     currentWeatherData: CurrentWeatherResponse,
-    WeatherDetails: WeatherDetails
+    weatherDetails: WeatherDetails
 ) {
 
     Surface(
@@ -974,7 +1044,11 @@ fun CurrentWeatherDetails(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 5.dp)
             )
-            HorizontalDivider(thickness = 1.3.dp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 70.dp, vertical = 3.dp))
+            HorizontalDivider(
+                thickness = 1.3.dp,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 70.dp, vertical = 3.dp)
+            )
             // TEST
             Row(
                 Modifier.fillMaxWidth(),
@@ -987,28 +1061,28 @@ fun CurrentWeatherDetails(
                         .weight(1f),
                 ) {
                     InfoCard(
-                        icon = R.drawable.weather_clear,
+                        icon = R.drawable.weather_data_humidity,
                         header = "Humidity",
-                        message = WeatherDetails.humidityMessage,
+                        message = weatherDetails.humidityMessage,
                         dataval = currentWeatherData.main.humidity.toString(),
                     )
                     InfoCard(
-                        icon = R.drawable.weather_clear,
+                        icon = R.drawable.weather_data_visibility,
                         header = "Visibility",
-                        message = WeatherDetails.visibilityMessage,
+                        message = weatherDetails.visibilityMessage,
                         dataval = currentWeatherData.visibility.toString(),
                     )
                     InfoCard(
-                        icon = R.drawable.weather_clear,
+                        icon = R.drawable.weather_data_rain,
                         header = "Rain",
-                        message = WeatherDetails.rainMessage,
+                        message = weatherDetails.rainMessage,
                         dataval = currentWeatherData.rain?.`1h`?.toString()
                             ?: "0.0",
                     )
                     InfoCard(
-                        icon = R.drawable.weather_clear,
+                        icon = R.drawable.cloudy_snowy_outline,
                         header = "Cloud",
-                        message = WeatherDetails.cloudMessage,
+                        message = weatherDetails.cloudMessage,
                         dataval = currentWeatherData.clouds.all.toString(),
                     )
                 }
@@ -1020,27 +1094,27 @@ fun CurrentWeatherDetails(
                 ) {
                     Column {
                         InfoCard(
-                            icon = R.drawable.weather_clear,
+                            icon = R.drawable.weather_data_feellike,
                             header = "Feels Like",
-                            message = WeatherDetails.feelsLikeMessage,
+                            message = weatherDetails.feelsLikeMessage,
                             dataval = currentWeatherData.main.feels_like.toString(),
                         )
                         InfoCard(
-                            icon = R.drawable.weather_clear,
+                            icon = R.drawable.weather_data_wind,
                             header = "Wind",
-                            message = WeatherDetails.windMessage,
+                            message = weatherDetails.windMessage,
                             dataval = currentWeatherData.wind.speed.toString(),
                         )
                         InfoCard(
-                            icon = R.drawable.weather_clear,
+                            icon = R.drawable.weather_data_sealevel,
                             header = "Sea Level",
-                            message = WeatherDetails.seaLevelPressureMessage,
+                            message = weatherDetails.seaLevelPressureMessage,
                             dataval = currentWeatherData.main.sea_level.toString(),
                         )
                         InfoCard(
-                            icon = R.drawable.weather_clear,
+                            icon = R.drawable.weather_data_airpres,
                             header = "Air Press.",
-                            message = WeatherDetails.airPressureMessage,
+                            message = weatherDetails.airPressureMessage,
                             dataval = currentWeatherData.main.pressure.toString(),
                         )
                     }

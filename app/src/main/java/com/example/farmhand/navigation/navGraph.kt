@@ -11,22 +11,25 @@ import com.example.farmhand.authentication.screen.AuthScreen
 import com.example.farmhand.module_Reco.model.OpenAiViewModel
 import com.example.farmhand.module_health.models.KindwiseViewModel
 import com.example.farmhand.module_health.screens.PlantHealthScreen
+import com.example.farmhand.module_user.models.UserViewModel
 import com.example.farmhand.module_weather.models.WeatherViewModel
 import com.example.farmhand.module_weather.screens.WeatherScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
+    val weatherViewModel: WeatherViewModel = hiltViewModel()
+    val KindwiseViewModel: KindwiseViewModel = hiltViewModel()
+    val OpenAiViewModel: OpenAiViewModel = hiltViewModel()
+    val userViewModel: UserViewModel = hiltViewModel()
     NavHost(navController = navController, startDestination = "auth") {
         // Auth Screen
         composable(route = "auth") {
-            AuthScreen(navController)
+            AuthScreen(navController, userViewModel = userViewModel)
         }
 
         // Main Application Scaffold with Bottom Navigation
         composable(route = "main") {
-            val weatherViewModel: WeatherViewModel = hiltViewModel()
-            val KindwiseViewModel: KindwiseViewModel = hiltViewModel()
-            val OpenAiViewModel: OpenAiViewModel = hiltViewModel()
+
             MainAppScaffold(
                 //navController,
                 weatherViewModel
@@ -42,7 +45,7 @@ fun NavGraph(navController: NavHostController) {
                         PlantHealthScreen(weatherViewModel = weatherViewModel, KindwiseViewModel = KindwiseViewModel, OpenAiViewModel = OpenAiViewModel)
                     }
                     composable(route = NavItems.Account.route) {
-                        AccountScreen(navController)
+                        AccountScreen(navController, userViewModel)
                     }
                 }
             }

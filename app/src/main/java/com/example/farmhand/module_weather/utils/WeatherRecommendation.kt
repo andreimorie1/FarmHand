@@ -1,8 +1,5 @@
 package com.example.farmhand.module_weather.utils
 
-import com.example.farmhand.module_weather.api.data.CurrentWeather.CurrentWeatherResponse
-
-
 data class WeatherRecommendations(
     val farming: String,
     val farmerHealth: String,
@@ -14,19 +11,35 @@ fun multilineString(vararg lines: String): String {
 }
 
 fun getWeatherRecommendation(
-    currentWeatherResponse: CurrentWeatherResponse
+    mainData: String,
+    windSpeedData: Double,
+    humidityData: Int,
+    visibilityData: Int,
+    rainData: Double,
+    tempData: Double,
+    airQualityData: String
 ): WeatherRecommendations {
-    val season = getSeason(currentWeatherResponse.dt.toLong())
+    val main = mainData //currentWeatherResponse.weather[0].main
+    val windSpeed = windSpeedData //currentWeatherResponse.wind.speed
+    val humidity = humidityData //currentWeatherResponse.main.humidity
+    val visibility = visibilityData //currentWeatherResponse.visibility
+    val rain = rainData //currentWeatherResponse.rain.`1h`
+    val temp = tempData //currentWeatherResponse.main.temp
+    val airquality = airQualityData
 
     val farming: String
     val farmerHealth: String
     val pestManagement: String
 
-    when (currentWeatherResponse.weather[0].main) {
+    when (
+        main
+        //currentWeatherResponse.weather[0].main
+    ) {
         "Clear" -> { //     Clear Weather
             when {
                 // Clear and Windy
-                currentWeatherResponse.wind.speed > 15 -> {
+                //currentWeatherResponse.wind.speed
+                windSpeed > 15 -> {
                     farming = multilineString(
                         "• Check for soil erosion and protect young plants from strong winds.",
                         "• Ensure irrigation systems are secure to prevent water loss due to evaporation."
@@ -41,7 +54,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Clear and Hot
-                currentWeatherResponse.main.temp > 35 -> {
+                //currentWeatherResponse.main.temp
+                temp > 35 -> {
                     farming = multilineString(
                         "• Increase irrigation frequency to prevent stress on crops.",
                         "• Apply mulch to retain soil moisture."
@@ -56,7 +70,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Clear and Dry
-                currentWeatherResponse.main.humidity < 30 -> {
+                //currentWeatherResponse.main.humidity
+                humidity < 30 -> {
                     farming = multilineString(
                         "• Irrigate regularly to combat dry conditions and support plant growth.",
                         "• Monitor for signs of drought stress in crops."
@@ -71,7 +86,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Clear and Humid
-                currentWeatherResponse.main.humidity > 70 -> {
+                //currentWeatherResponse.main.humidity
+                humidity > 70 -> {
                     farming = multilineString(
                         "• Ensure good air circulation in crops to prevent fungal diseases.",
                         "• Water in the early morning or late afternoon to reduce evaporation."
@@ -104,7 +120,8 @@ fun getWeatherRecommendation(
         "Clouds" -> {   //  Cloudy
             when {
                 // Cloudy and Cool
-                currentWeatherResponse.main.temp < 20 -> {
+                //currentWeatherResponse.main.temp
+                temp < 20 -> {
                     farming = multilineString(
                         "• Monitor for frost risk; consider protective measures for sensitive crops.",
                         "• Delayed planting may be necessary if temperatures are too low."
@@ -119,7 +136,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Cloudy and Mild
-                currentWeatherResponse.main.temp in 20.0..30.0 -> {
+                // currentWeatherResponse.main.temp
+                temp in 20.0..30.0 -> {
                     farming = multilineString(
                         "• Good growing conditions; monitor for adequate moisture levels.",
                         "• Consider applying nitrogen fertilizers to promote growth."
@@ -134,7 +152,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Cloudy and Warm
-                currentWeatherResponse.main.temp > 30 -> {
+                // currentWeatherResponse.main.temp
+                temp > 30 -> {
                     farming = multilineString(
                         "• Ensure proper irrigation; cloudy weather can sometimes hide heat stress.",
                         "• Monitor for disease pressure due to high humidity levels."
@@ -149,7 +168,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Cloudy with High Humidity
-                currentWeatherResponse.main.humidity > 80 -> {
+                // currentWeatherResponse.main.humidity
+                humidity > 80 -> {
                     farming = multilineString(
                         "• Increase air circulation around crops to prevent fungal diseases.",
                         "• Delay watering if conditions are excessively humid to avoid waterlogging."
@@ -164,7 +184,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Cloudy with Rain/Drizzle
-                currentWeatherResponse.rain.`1h` > 0 -> {
+                // currentWeatherResponse.rain.`1h`
+                rain > 0 -> {
                     farming = multilineString(
                         "• Assess drainage systems to avoid waterlogging.",
                         "• Delay any pesticide applications until after the rain subsides."
@@ -179,7 +200,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Cloudy with Strong Winds
-                currentWeatherResponse.wind.speed > 15 -> {
+                // currentWeatherResponse.wind.speed
+                windSpeed > 15 -> {
                     farming = multilineString(
                         "• Secure any loose structures or equipment to prevent damage from wind.",
                         "• Check for potential damage to crops from wind gusts."
@@ -215,7 +237,8 @@ fun getWeatherRecommendation(
         "Rain" -> {
             when {
                 // Light Rain with Mild Temperature
-                currentWeatherResponse.rain.`1h` < 5 && currentWeatherResponse.main.temp in 20.0..30.0 -> {
+                //currentWeatherResponse.rain.`1h`      currentWeatherResponse.main.temp
+                rain < 5 && temp in 20.0..30.0 -> {
                     farming = multilineString(
                         "• Light rain provides good moisture; monitor soil to avoid over-irrigation.",
                         "• Consider applying nitrogen fertilizers, as rain can enhance nutrient absorption."
@@ -231,7 +254,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate to Heavy Rain
-                currentWeatherResponse.rain.`1h` in 5.0..15.0 -> {
+                //currentWeatherResponse.rain.`1h`
+                rain in 5.0..15.0 -> {
                     farming = multilineString(
                         "• Ensure proper drainage to prevent waterlogging in fields.",
                         "• Avoid applying fertilizers or pesticides until rain subsides to prevent runoff.",
@@ -248,7 +272,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Heavy Rain with Cool Temperatures
-                currentWeatherResponse.rain.`1h` > 15 && currentWeatherResponse.main.temp < 20 -> {
+                //currentWeatherResponse.rain.`1h`      currentWeatherResponse.main.temp
+                rain > 15 && temp < 20 -> {
                     farming = multilineString(
                         "• Heavy rain with low temperatures can cause root rot; inspect drainage frequently.",
                         "• Delay all chemical applications until the ground dries to prevent crop burn.",
@@ -265,7 +290,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Intense Rain with High Winds
-                currentWeatherResponse.wind.speed > 15 -> {
+                // currentWeatherResponse.wind.speed
+                windSpeed > 15 -> {
                     farming = multilineString(
                         "• Secure young or lightweight crops that could be damaged by high winds.",
                         "• Delay fertilizer applications, as runoff is likely.",
@@ -282,7 +308,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Persistent Light Rain with High Humidity
-                currentWeatherResponse.rain.`1h` < 5 && currentWeatherResponse.main.humidity > 80 -> {
+                // currentWeatherResponse.rain.`1h`     currentWeatherResponse.main.humidity
+                rain < 5 && humidity > 80 -> {
                     farming = multilineString(
                         "• Persistent light rain increases humidity, which may promote fungal diseases.",
                         "• Avoid watering plants as soil moisture is likely adequate.",
@@ -319,7 +346,8 @@ fun getWeatherRecommendation(
         "Thunderstorm" -> {
             when {
                 // Thunderstorm with Heavy Rain
-                currentWeatherResponse.rain.`1h` > 15 -> {
+                //currentWeatherResponse.rain.`1h`
+                rain > 15 -> {
                     farming = multilineString(
                         "• Heavy rain during a thunderstorm can cause severe waterlogging; check field drainage regularly.",
                         "• Secure seedlings and young plants as high winds may uproot them.",
@@ -337,7 +365,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Thunderstorm with High Winds
-                currentWeatherResponse.wind.speed > 15 -> {
+                //currentWeatherResponse.wind.speed
+                windSpeed > 15 -> {
                     farming = multilineString(
                         "• High winds can damage crops; use support stakes for plants that might bend or uproot.",
                         "• Postpone any irrigation to avoid oversaturation and soil erosion during high winds.",
@@ -354,7 +383,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Thunderstorm with Mild Rain and Humidity
-                currentWeatherResponse.rain.`1h` < 10 && currentWeatherResponse.main.humidity > 80 -> {
+                //currentWeatherResponse.rain.`1h`      currentWeatherResponse.main.humidity
+                rain < 10 && humidity > 80 -> {
                     farming = multilineString(
                         "• Thunderstorms with light rain can increase humidity, which promotes fungal growth; check crops for mildew.",
                         "• Ensure proper drainage to prevent minor waterlogging in humid conditions.",
@@ -371,7 +401,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Severe Thunderstorm with Lightning and Moderate Rain
-                currentWeatherResponse.rain.`1h` in 10.0..15.0 -> {
+                //currentWeatherResponse.rain.`1h`
+                rain in 10.0..15.0 -> {
                     farming = multilineString(
                         "• Securely stake crops vulnerable to wind and rain damage.",
                         "• Postpone any fertilizing or spraying activities until the storm subsides.",
@@ -408,7 +439,8 @@ fun getWeatherRecommendation(
         "Drizzle" -> {
             when {
                 // Light Drizzle with Cool Temperatures
-                currentWeatherResponse.main.temp < 25 && currentWeatherResponse.rain.`1h` < 2 -> {
+                // currentWeatherResponse.main.temp     currentWeatherResponse.rain.`1h`
+                temp < 25 && rain < 2 -> {
                     farming = multilineString(
                         "• Light drizzle with cool temperatures can benefit rice seedlings by providing gentle moisture.",
                         "• Continue monitoring fields to ensure adequate moisture without waterlogging.",
@@ -425,7 +457,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate Drizzle with Warm Temperatures
-                currentWeatherResponse.main.temp in 25.0..30.0 && currentWeatherResponse.rain.`1h` in 2.0..5.0 -> {
+                // currentWeatherResponse.main.temp     currentWeatherResponse.rain.`1h`
+                temp in 25.0..30.0 && rain in 2.0..5.0 -> {
                     farming = multilineString(
                         "• Moderate drizzle and warm temperatures may lead to waterlogged soil; ensure proper drainage.",
                         "• Delay fertilizer application to avoid runoff or nutrient leaching.",
@@ -442,7 +475,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Prolonged Drizzle with High Humidity
-                currentWeatherResponse.rain.`1h` >= 5 && currentWeatherResponse.main.humidity > 85 -> {
+                //currentWeatherResponse.rain.`1h`      currentWeatherResponse.main.humidity
+                rain >= 5 && humidity > 85 -> {
                     farming = multilineString(
                         "• Prolonged drizzle with high humidity can weaken young plants; monitor for signs of root rot or fungal issues.",
                         "• Delay any sowing or planting until conditions dry out to avoid seed rot.",
@@ -480,7 +514,8 @@ fun getWeatherRecommendation(
         "Mist" -> {
             when {
                 // High Humidity Mist
-                currentWeatherResponse.main.humidity > 90 -> {
+                //currentWeatherResponse.main.humidity
+                humidity > 90 -> {
                     farming = multilineString(
                         "• High humidity from mist may encourage fungal diseases; inspect crops regularly.",
                         "• Delay applying pesticides or fertilizers until the mist clears to prevent runoff.",
@@ -497,7 +532,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Mild Mist with Moderate Humidity
-                currentWeatherResponse.main.humidity in 80..90 -> {
+                // currentWeatherResponse.main.humidity
+                humidity in 80..90 -> {
                     farming = multilineString(
                         "• Light mist can delay evaporation; monitor soil moisture to avoid over-watering.",
                         "• Mist may reduce sunlight, so adjust irrigation if plants show signs of moisture stress."
@@ -532,7 +568,8 @@ fun getWeatherRecommendation(
         "Fog" -> {
             when {
                 // Dense Fog with High Humidity
-                currentWeatherResponse.main.humidity > 90 -> {
+                // currentWeatherResponse.main.humidity
+                humidity > 90 -> {
                     farming = multilineString(
                         "• Dense fog can increase the risk of fungal diseases; monitor plants closely.",
                         "• Avoid chemical applications until fog clears to reduce runoff risk.",
@@ -549,7 +586,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Mild Fog with Moderate Humidity
-                currentWeatherResponse.main.humidity in 80..90 -> {
+                // currentWeatherResponse.main.humidity
+                humidity in 80..90 -> {
                     farming = multilineString(
                         "• Moderate fog can reduce sunlight; adjust irrigation if plants show signs of moisture stress.",
                         "• Avoid disturbing soil to prevent compaction in damp conditions."
@@ -584,11 +622,9 @@ fun getWeatherRecommendation(
         "Haze" -> {
             when {
                 // Haze with Poor Air Quality
-                currentWeatherResponse.main.humidity < 80 && currentWeatherResponse.weather.any {
-                    it.description.contains(
-                        "smoke"
-                    ) || it.description.contains("dust")
-                } -> {
+                // currentWeatherResponse.main.humidity
+
+                humidity < 80 && (airquality.contains("smoke") || airquality.contains("dust")) -> {
                     farming = multilineString(
                         "• Haze due to dust or smoke may limit sunlight, affecting photosynthesis; monitor crop health.",
                         "• Avoid spraying pesticides or fertilizers as they may not distribute evenly in low visibility."
@@ -604,7 +640,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Haze with Moderate Visibility and Humidity
-                currentWeatherResponse.main.humidity in 80..90 -> {
+                //currentWeatherResponse.main.humidity
+                humidity in 80..90 -> {
                     farming = multilineString(
                         "• Haze with moderate humidity can reduce sunlight; monitor plants for signs of light stress.",
                         "• Continue regular farming practices but be cautious with chemical application in low visibility."
@@ -639,7 +676,8 @@ fun getWeatherRecommendation(
         "Smoke" -> {
             when {
                 // Dense Smoke
-                currentWeatherResponse.visibility < 500 -> {
+                // currentWeatherResponse.visibility
+                visibility < 500 -> {
                     farming = multilineString(
                         "• Extremely low visibility due to smoke necessitates postponing all outdoor activities.",
                         "• Ensure that all equipment is secured to avoid accidents.",
@@ -655,7 +693,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate Smoke
-                currentWeatherResponse.visibility in 500..1000 -> {
+                // currentWeatherResponse.visibility
+                visibility in 500..1000 -> {
                     farming = multilineString(
                         "• Reduced visibility can impact field navigation; proceed with caution.",
                         "• Consider postponing any non-essential tasks until visibility improves."
@@ -689,7 +728,8 @@ fun getWeatherRecommendation(
         "Dust" -> {
             when {
                 // High Dust Levels with Low Visibility
-                currentWeatherResponse.visibility < 1000 -> {
+                // currentWeatherResponse.visibility
+                visibility < 1000 -> {
                     farming = multilineString(
                         "• Poor visibility due to dust requires caution when moving through fields; consider postponing work.",
                         "• Ensure that all equipment is secured to prevent accidents due to low visibility.",
@@ -705,7 +745,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate Dust Levels
-                currentWeatherResponse.visibility in 1000..2000 -> {
+                // currentWeatherResponse.visibility
+                visibility in 1000..2000 -> {
                     farming = multilineString(
                         "• Moderate dust may impact visibility; proceed with caution while working outdoors.",
                         "• Monitor dust levels and consider adjusting irrigation practices to mitigate soil disturbance."
@@ -739,7 +780,8 @@ fun getWeatherRecommendation(
         "Ash" -> {
             when {
                 // High Ash fall with Low Visibility
-                currentWeatherResponse.visibility < 1000 -> {
+                // currentWeatherResponse.visibility
+                visibility < 1000 -> {
                     farming = multilineString(
                         "• Volcanic ash can damage crops; cover sensitive plants if possible to reduce exposure.",
                         "• Avoid irrigation during ashfall to prevent ash from solidifying on plants.",
@@ -757,7 +799,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate Ashfall with Reduced Visibility
-                currentWeatherResponse.visibility in 1000..2000 -> {
+                //currentWeatherResponse.visibility
+                visibility in 1000..2000 -> {
                     farming = multilineString(
                         "• Light ashfall can affect soil and crop health; gently clean ash from crops if feasible.",
                         "• Minimize activities that disturb the soil, as ash can compact and alter soil properties.",
@@ -795,7 +838,8 @@ fun getWeatherRecommendation(
         "Squall" -> {
             when {
                 // High-Intensity Squall with Extremely High Winds
-                currentWeatherResponse.wind.speed > 20 -> {
+                // currentWeatherResponse.wind.speed
+                windSpeed > 20 -> {
                     farming = multilineString(
                         "• Strong winds may damage or uproot crops; consider using additional supports for vulnerable plants.",
                         "• Avoid applying fertilizers or pesticides, as strong winds may cause drift and uneven application.",
@@ -813,7 +857,8 @@ fun getWeatherRecommendation(
                 }
 
                 // Moderate Squall with High Winds
-                currentWeatherResponse.wind.speed in 15.0..20.0 -> {
+                // currentWeatherResponse.wind.speed
+                windSpeed in 15.0..20.0 -> {
                     farming = multilineString(
                         "• High winds can stress or damage crops; check supports for plants that may be vulnerable.",
                         "• Postpone irrigation to prevent soil erosion and minimize moisture loss due to evaporation.",

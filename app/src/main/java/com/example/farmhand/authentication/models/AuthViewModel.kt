@@ -31,6 +31,7 @@ class AuthViewModel @Inject constructor(
     //Setter
     private val _isAuthenticated = MutableStateFlow(false)
     private var _username by mutableStateOf("")
+    private var _lastname by mutableStateOf("")
     private var _password by mutableStateOf("")
     private var _rePassword by mutableStateOf("")
     var passwordVisible by mutableStateOf(false)
@@ -43,6 +44,10 @@ class AuthViewModel @Inject constructor(
 
     fun onUsernameChange(newUsername: String) {
         _username = newUsername
+    }
+
+    fun onLastnameChange(newlastname: String) {
+        _lastname = newlastname
     }
 
     fun onPasswordChange(newPassword: String) {
@@ -59,6 +64,7 @@ class AuthViewModel @Inject constructor(
 
     //getter
     val username: String get() = _username
+    val lastname: String get() = _lastname
     val password: String get() = _password
     val rePassword: String get() = _rePassword
     val isAuthenticated : StateFlow<Boolean> = _isAuthenticated
@@ -66,6 +72,7 @@ class AuthViewModel @Inject constructor(
     // Text field reset
     fun fieldReset() {
         _username = ""
+        _lastname = ""
         _password = ""
         _rePassword = ""
         _errorMessages.clear()
@@ -125,6 +132,12 @@ class AuthViewModel @Inject constructor(
         return errorMessages
     }
 
+    fun passwordError(){
+        _errorMessages.add("Password: Passwords should be identical")
+    }
+    fun clearError(){
+        _errorMessages.clear()
+    }
     //Register Logic
     private suspend fun registerUser() {
         val testUser = User(

@@ -17,7 +17,7 @@ object AuthManager {
         val prefs = getPreferences(context)
         prefs.edit().putBoolean(KEY_IS_LOGGED_IN, isLoggedIn).apply()
         prefs.edit().putInt(KEY_USER_ID, userID).apply()
-        Log.d("Authmanager", "SharedModel Value: $userID")
+        Log.d("Authmanager", "SharedModel Value: $userID | $isLoggedIn, $userID")
     }
 
     fun isUserLoggedIn(context: Context): Boolean {

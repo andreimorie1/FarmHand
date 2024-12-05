@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -422,7 +423,8 @@ Based on the current weather conditions and the healthy status of the crop, prov
                                     onClick = {// CALL OPENAI!!
                                         showDialog = true
 
-                                        val prompt = if (result.crop.suggestions.firstOrNull()?.name != "healthy") unhealthyPrompt else healthyPrompt
+                                        val prompt =
+                                            if (result.crop.suggestions.firstOrNull()?.name != "healthy") unhealthyPrompt else healthyPrompt
 
                                         val messages = listOf(
                                             Message(
@@ -460,11 +462,15 @@ Based on the current weather conditions and the healthy status of the crop, prov
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        result.crop.suggestions.firstOrNull()?.scientific_name ?: "",
+                                        result.crop.suggestions.firstOrNull()?.scientific_name
+                                            ?: "",
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                 } else {
-                                    Text(suggestion.name, style = MaterialTheme.typography.titleMedium)
+                                    Text(
+                                        suggestion.name,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
 
                                     Text(
                                         suggestion.scientific_name,
@@ -528,11 +534,21 @@ fun CustomDialog(
     bodyContent: @Composable () -> Unit,
     confirmButtonText: String = "Close",
 ) {
+    val scrollState: ScrollState = rememberScrollState()
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { titleContent() },
-            text = { bodyContent() },
+            text = {
+                bodyContent()
+                Column(Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .verticalScroll(scrollState)
+                ) {
+
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
