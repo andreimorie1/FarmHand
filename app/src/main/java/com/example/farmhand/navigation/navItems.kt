@@ -36,5 +36,12 @@ sealed class NavItems(
         hasBadge = false,
         badgeNum = 0
     )
-
+    object Farming : NavItems(
+        route = "farming",
+        title = "Farming",
+        selectedIcon = R.drawable.farming,
+        unselectedIcon = R.drawable.farming,
+        hasBadge = false,
+        badgeNum = 0
+    )
 }

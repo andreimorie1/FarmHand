@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.storage)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,7 +89,7 @@ dependencies {
 
     debugImplementation(libs.ui.tooling)
 
-        //retrofit
+    //retrofit
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation(libs.coil.compose)
@@ -101,14 +102,10 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.androidx.lifecycle.runtime.ktx.v262)
+    implementation(libs.androidx.room.ktx)
 
     implementation(libs.coil.compose)
 
     //Markdown format OpenAI's response
     implementation (libs.compose.markdown)
-
-    implementation("com.google.code.gson:gson:2.8.8")
-
-
-
 }

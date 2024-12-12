@@ -128,6 +128,9 @@ fun AuthScreen(navController: NavHostController, userViewModel: UserViewModel) {
                         authViewModel.passwordError()
                     }
                 } else {
+                    navController.navigate("main") {
+                        popUpTo("main") { inclusive = true } // Clear backstack
+                    }
                     userViewModel.loginFarmer(
                         LoginRequest(
                             firstname = authViewModel.username,

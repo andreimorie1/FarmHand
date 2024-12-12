@@ -9,6 +9,7 @@ class ScaffoldViewModel : ViewModel() {
     val navItems = listOf(
         NavItems.Weather,
         NavItems.PlantHealth,
+        NavItems.Farming,
         NavItems.Account
     )
 

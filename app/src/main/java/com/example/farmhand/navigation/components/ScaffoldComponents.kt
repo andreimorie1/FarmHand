@@ -35,7 +35,6 @@ fun NavIcon(
 @Composable
 fun MainAppScaffold(
     //navController: NavHostController,
-    weatherViewModel: WeatherViewModel,
     content: @Composable (NavHostController) -> Unit // Expecting a NavHostController for inner screens){}){}
 ) {
     val scaffoldModel = ScaffoldViewModel()

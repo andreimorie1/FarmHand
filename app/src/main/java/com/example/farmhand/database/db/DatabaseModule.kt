@@ -2,7 +2,10 @@ package com.example.farmhand.database.db
 
 import android.content.Context
 import androidx.room.Room
+import com.example.farmhand.database.DAO.FarmingDao
 import com.example.farmhand.database.database.AppDatabase
+import com.example.farmhand.database.repositories.LogRepository
+import com.example.farmhand.database.repositories.TaskRepository
 import com.example.farmhand.database.repositories.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -28,5 +31,20 @@ object DatabaseModule {
     @Provides
     fun provideUserRepository(db: AppDatabase): UserRepository {
         return UserRepository(db) // You might need to pass the DAO here: UserRepository(db.userDao())
+    }
+
+    @Provides
+    fun provideFarmingDao(db: AppDatabase): FarmingDao {
+        return db.farmingDao // Provide the DAO for tasks and logs
+    }
+
+    @Provides
+    fun provideTaskRepository(farmingDao: FarmingDao): TaskRepository {
+        return TaskRepository(farmingDao) // Pass DAO to the repository
+    }
+
+    @Provides
+    fun provideLogRepository(farmingDao: FarmingDao): LogRepository {
+        return LogRepository(farmingDao) // Pass DAO to the repository
     }
 }
