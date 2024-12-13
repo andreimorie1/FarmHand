@@ -1,18 +1,35 @@
 package com.example.farmhand.module_farming.model
 
+import android.Manifest
+import android.app.Activity
+import android.content.ContentValues
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.farmhand.database.entities.Logs
 import com.example.farmhand.database.entities.Task
+import com.example.farmhand.database.entities.WeatherLog
 import com.example.farmhand.database.repositories.LogRepository
 import com.example.farmhand.database.repositories.TaskRepository
+import com.example.farmhand.database.repositories.WeatherLogRepository
 import com.example.farmhand.module_weather.api.data.ThirtyDayWeather.ThirtyDayForecastResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -21,12 +38,132 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FarmingViewModel @Inject constructor(
+    private val weatherLogRepository: WeatherLogRepository,
     private val taskRepository: TaskRepository,
     private val logRepository: LogRepository
 ) : ViewModel() {
 
     val tasks: LiveData<List<Task>> = taskRepository.getPendingTasks()
     val logs: LiveData<List<Logs>> = logRepository.getAllLogs()
+
+    val allTasks: LiveData<List<Task>> = taskRepository.getAllTasks()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateWeatherLogs(weatherData: ThirtyDayForecastResponse): List<WeatherLog> {
+        return weatherData.list.flatMap { weatherLog ->
+            weatherLog.weather.map { weather ->
+                WeatherLog(
+                    date = Instant.ofEpochSecond(weatherLog.dt.toLong())
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(),
+                    weatherMain = weather.main
+                )
+            }
+        }
+    }
+
+    fun resetCycleData() {
+        CoroutineScope(Dispatchers.IO).launch {
+            taskRepository.clearAllTasks()
+            logRepository.clearAllLogs()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun generatePdf(context: Context, report: SummaryReport) {
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(300, 600, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+
+        val canvas = page.canvas
+        val paint = Paint()
+        paint.textSize = 14f
+        val textWidth = pageInfo.pageWidth - 20f // Keep some margin
+        val lineSpacing = 20f // Vertical line spacing
+
+        fun drawTextWrapped(text: String, x: Float, y: Float): Float {
+            val words = text.split(" ")
+            var line = ""
+            var currentY = y
+
+            for (word in words) {
+                val testLine = "$line $word"
+                if (paint.measureText(testLine) <= textWidth) {
+                    line = testLine
+                } else {
+                    canvas.drawText(line, x, currentY, paint)
+                    currentY += lineSpacing  // Move to the next line
+                    line = word
+                }
+            }
+            canvas.drawText(line, x, currentY, paint)  // Draw the last line
+            return currentY + lineSpacing // Return the new vertical position
+        }
+
+        var currentY = 25f // Starting Y position
+
+        // Report Details
+        currentY = drawTextWrapped("Summary Report", 10f, currentY)
+        currentY = drawTextWrapped("Total Tasks: ${report.totalTasks}", 10f, currentY)
+        currentY = drawTextWrapped("Completed: ${report.completedTasks}", 10f, currentY)
+        currentY = drawTextWrapped("Pending: ${report.pendingTasks}", 10f, currentY)
+        currentY = drawTextWrapped("Rainy Days: ${report.rainyDays}", 10f, currentY)
+        currentY = drawTextWrapped("Dry Days: ${report.dryDays}", 10f, currentY)
+        currentY = drawTextWrapped("Health Issues: ${report.healthIssuesCount}", 10f, currentY)
+
+        // Additional Insights
+        currentY = drawTextWrapped("Task Completion Rate: ${"%.2f".format(report.taskCompletionRate)}%", 10f, currentY)
+        currentY = drawTextWrapped("Pest Monitoring Completion: ${"%.2f".format(report.pestCompletionRate)}%", 10f, currentY)
+        currentY = drawTextWrapped("Weather Impact: ${report.weatherImpact}", 10f, currentY)
+
+        // Cycle Success Evaluation
+        currentY = drawTextWrapped("Cycle Success: ${report.cycleSuccess}", 10f, currentY)
+
+        // Recommendations
+        currentY = drawTextWrapped("Recommendations:", 10f, currentY)
+        report.recommendations.forEachIndexed { index, recommendation ->
+            currentY = drawTextWrapped("- $recommendation", 10f, currentY)
+        }
+
+        pdfDocument.finishPage(page)
+
+        // Handle file saving (same as previous code for handling Android versions)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, "summary_report.pdf")
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+
+            val contentResolver = context.contentResolver
+            val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                contentResolver.openOutputStream(it)?.use { outputStream ->
+                    pdfDocument.writeTo(outputStream)
+                    Toast.makeText(context, "PDF saved to Downloads", Toast.LENGTH_LONG).show()
+                }
+            }
+        } else {
+            val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val file = File(downloadsFolder, "summary_report.pdf")
+
+            if (!downloadsFolder.exists()) {
+                downloadsFolder.mkdirs()
+            }
+
+            pdfDocument.writeTo(FileOutputStream(file))
+            Toast.makeText(context, "PDF saved to ${file.absolutePath}", Toast.LENGTH_LONG).show()
+        }
+
+        pdfDocument.close()
+    }
+
+
+
+    suspend fun getWeatherLogs(startDate: Long, endDate: Long): List<WeatherLog> {
+        return weatherLogRepository.getWeatherLogsBetweenDates(startDate, endDate)
+    }
 
     // Function to trigger task generation based on weather data
     @RequiresApi(Build.VERSION_CODES.O)
@@ -78,6 +215,7 @@ class FarmingViewModel @Inject constructor(
         riceVarietyDetails: Map<String, Map<String, Any>> // Added this parameter
     ): List<Task> {
         val tasks = mutableListOf<Task>()
+
 
         // Safety check for null or empty data
         if (thirtyDayForecastData == null || thirtyDayForecastData.list.isEmpty()) {
@@ -146,6 +284,7 @@ class FarmingViewModel @Inject constructor(
             val rainyDays = thirtyDayForecastData.list.filter { day ->
                 day.weather.any { it.main == "Rain" || it.main == "Thunderstorm" }
             }
+
 
             rainyDays.firstOrNull()?.let { rainDay ->
                 val rainDate = Instant.ofEpochSecond(rainDay.dt.toLong())
@@ -239,7 +378,7 @@ class FarmingViewModel @Inject constructor(
 
             tasks.add(
                 Task(
-                    date = plantingDate.plusDays(30),
+                    date = plantingDate.plusDays(32),
                     task = "Review completed tasks and prepare for the next cycle.",
                     status = "Pending",
                     type = "SummaryReport"
@@ -256,6 +395,107 @@ class FarmingViewModel @Inject constructor(
         return tasks
     }
 
+    fun generateSummaryReport(tasks: List<Task>, weatherLogs: List<WeatherLog>): SummaryReport {
+        val completedTasks = tasks.filter { it.status == "Completed" }
+        val pendingTasks = tasks.filter { it.status != "Completed" }
+
+        val rainyDays = weatherLogs.count { it.weatherMain == "Rain" }
+        val dryDays = weatherLogs.size - rainyDays
+
+        val healthCheckIssues = tasks.filter { it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" && it.outcome == "Pests Detected" || it.outcome == "Diseased" }
+
+        val completionRate = if (tasks.isNotEmpty()) {
+            (completedTasks.size.toDouble() / tasks.size.toDouble()) * 100
+        } else 0.0
+
+        val pestMonitoringTasks = tasks.filter { it.type == "PestMonitoring" || it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" }
+        val completedPestTasks = pestMonitoringTasks.filter { it.status == "Completed" }
+        val pestCompletionRate = if (pestMonitoringTasks.isNotEmpty()) {
+            (completedPestTasks.size.toDouble() / pestMonitoringTasks.size.toDouble()) * 100
+        } else 0.0
+
+        val weatherImpactAnalysis = if (rainyDays > 0) {
+            "Rainy days impacted task completion, especially for pest monitoring."
+        } else {
+            "Dry days had a positive impact on task completion."
+        }
+
+        // Success evaluation based on task completion and weather impact
+        val cycleSuccess = if (completionRate >= 80 && pestCompletionRate >= 75) {
+            "Cycle was successful! Great job on completing most tasks and managing pests well."
+        } else if (completionRate < 50) {
+            "Cycle needs improvement. Consider reviewing pending tasks and pest management strategies."
+        } else {
+            "Cycle was somewhat successful. Keep an eye on improving task completion and pest control."
+        }
+
+        return SummaryReport(
+            totalTasks = tasks.size,
+            completedTasks = completedTasks.size,
+            pendingTasks = pendingTasks.size,
+            rainyDays = rainyDays,
+            dryDays = dryDays,
+            healthIssuesCount = healthCheckIssues.size,
+            taskCompletionRate = completionRate,
+            pestCompletionRate = pestCompletionRate,
+            weatherImpact = weatherImpactAnalysis,
+            cycleSuccess = cycleSuccess,  // Added success evaluation
+            recommendations = generateRecommendations(pendingTasks, healthCheckIssues, completedTasks, weatherLogs)
+        )
+    }
+
+
+    fun generateRecommendations(pendingTasks: List<Task>, healthIssues: List<Task>, completedTasks: List<Task>, weatherLogs: List<WeatherLog>): List<String> {
+        val recommendations = mutableListOf<String>()
+
+        // Pending Tasks
+        if (pendingTasks.isNotEmpty()) {
+            recommendations.add("Ensure all pending tasks are completed to avoid delays in the next cycle. Pending tasks could impact future yields.")
+        }
+
+        // Health Issues
+        if (healthIssues.isNotEmpty()) {
+            recommendations.add("Address the health issues identified during inspections promptly. Delayed actions could lead to further crop stress and reduced yields.")
+        }
+
+        // Pest and Disease Monitoring
+        val pestTasks = completedTasks.filter { it.type == "PestMonitoring" }
+        val uncompletedPestTasks = pendingTasks.filter { it.type == "PestMonitoring" }
+        if (pestTasks.isEmpty() || uncompletedPestTasks.isNotEmpty()) {
+            recommendations.add("Consider increasing frequency of pest and disease monitoring to avoid infestations, especially if tasks were not completed.")
+        }
+
+        // Weather Impact Reflection
+        val rainyDays = weatherLogs.count { it.weatherMain == "Rain" }
+        if (rainyDays > 5) {  // Assuming 5 rainy days as a threshold for major impact
+            recommendations.add("Excessive rain during the cycle might have hindered some tasks, especially those requiring dry conditions. Consider adjusting your task timing to avoid weather disruptions in the future.")
+        }
+
+        // Review of Task Completion Rate
+        val completionRate = if (completedTasks.isNotEmpty()) {
+            (completedTasks.size.toDouble() / (completedTasks.size + pendingTasks.size)) * 100
+        } else 0.0
+        if (completionRate < 75) {
+            recommendations.add("Task completion rate is below 75%. Review the tasks that were left incomplete and strategize on ways to improve task follow-up and time management.")
+        }
+
+        return recommendations
+    }
+
+
+    data class SummaryReport(
+        val totalTasks: Int,
+        val completedTasks: Int,
+        val pendingTasks: Int,
+        val rainyDays: Int,
+        val dryDays: Int,
+        val healthIssuesCount: Int,
+        val taskCompletionRate: Double,
+        val pestCompletionRate: Double,
+        val weatherImpact: String,
+        val cycleSuccess: String,
+        val recommendations: List<String>
+    )
 
 }
 

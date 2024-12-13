@@ -3,6 +3,9 @@ package com.example.farmhand.database.repositories
 import androidx.lifecycle.LiveData
 import com.example.farmhand.database.DAO.FarmingDao
 import com.example.farmhand.database.entities.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class TaskRepository(private val farmingDao: FarmingDao) {
     // Insert a new task
@@ -15,13 +18,14 @@ class TaskRepository(private val farmingDao: FarmingDao) {
         return farmingDao.getPendingTasks()
     }
 
-    // Mark task as completed
-    suspend fun markTaskAsCompleted(taskId: Int) {
-        farmingDao.updateTaskStatus(taskId, "Completed")
+    fun getAllTasks(): LiveData<List<Task>> {
+        return farmingDao.getAllTasks()
     }
 
-    fun getTasksByType(type: String): LiveData<List<Task>> {
-        return farmingDao.getTasksByType(type)
+    fun clearAllTasks() {
+        CoroutineScope(Dispatchers.IO).launch {
+            farmingDao.clearAllTasks()
+        }
     }
 
     suspend fun markTaskAsCompletedWithOutcome(taskId: Int, outcome: String?) {

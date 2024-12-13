@@ -11,13 +11,15 @@ import com.example.farmhand.database.converter.DateConverter
 import com.example.farmhand.database.entities.Logs
 import com.example.farmhand.database.entities.Task
 import com.example.farmhand.database.entities.User
+import com.example.farmhand.database.entities.WeatherLog
 
 
 @Database(
     entities = [
         User::class,
         Task::class,
-        Logs::class
+        Logs::class,
+        WeatherLog::class
     ], version = 1
 )
 @TypeConverters(DateConverter::class)
