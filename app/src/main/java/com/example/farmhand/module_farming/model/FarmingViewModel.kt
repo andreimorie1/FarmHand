@@ -1,10 +1,7 @@
 package com.example.farmhand.module_farming.model
 
-import android.Manifest
-import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.os.Build
@@ -13,7 +10,6 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +29,6 @@ import java.io.FileOutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -112,8 +107,16 @@ class FarmingViewModel @Inject constructor(
         currentY = drawTextWrapped("Health Issues: ${report.healthIssuesCount}", 10f, currentY)
 
         // Additional Insights
-        currentY = drawTextWrapped("Task Completion Rate: ${"%.2f".format(report.taskCompletionRate)}%", 10f, currentY)
-        currentY = drawTextWrapped("Pest Monitoring Completion: ${"%.2f".format(report.pestCompletionRate)}%", 10f, currentY)
+        currentY = drawTextWrapped(
+            "Task Completion Rate: ${"%.2f".format(report.taskCompletionRate)}%",
+            10f,
+            currentY
+        )
+        currentY = drawTextWrapped(
+            "Pest Monitoring Completion: ${"%.2f".format(report.pestCompletionRate)}%",
+            10f,
+            currentY
+        )
         currentY = drawTextWrapped("Weather Impact: ${report.weatherImpact}", 10f, currentY)
 
         // Cycle Success Evaluation
@@ -136,7 +139,8 @@ class FarmingViewModel @Inject constructor(
             }
 
             val contentResolver = context.contentResolver
-            val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            val uri =
+                contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
             uri?.let {
                 contentResolver.openOutputStream(it)?.use { outputStream ->
@@ -145,7 +149,8 @@ class FarmingViewModel @Inject constructor(
                 }
             }
         } else {
-            val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val downloadsFolder =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val file = File(downloadsFolder, "summary_report.pdf")
 
             if (!downloadsFolder.exists()) {
@@ -160,23 +165,38 @@ class FarmingViewModel @Inject constructor(
     }
 
 
-
     suspend fun getWeatherLogs(startDate: Long, endDate: Long): List<WeatherLog> {
         return weatherLogRepository.getWeatherLogsBetweenDates(startDate, endDate)
     }
 
-    // Function to trigger task generation based on weather data
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateTaskPlan(thirtyDayForecastData: ThirtyDayForecastResponse?, riceVariety: String) {
-        viewModelScope.launch {
+    fun generateFullCyclePlan(
+        thirtyDayForecastData: ThirtyDayForecastResponse?,
+        riceVariety: String,
+    ) {
+        val tasks = mutableListOf<Task>()
 
-            val generatedTasks = generateTasks(thirtyDayForecastData, riceVariety, riceVarietyDetails)
-            // Assuming you have a way to insert tasks into your repository (db)
-            for (task in generatedTasks) {
-                Log.d("TaskGenerator", "Generated tasks: ${generatedTasks.map { it.task }}")
+        // Get the total number of cycles for the selected rice variety
+        val totalCycles = riceVarietyDetails[riceVariety]?.get("totalCycles") as? Int
+            ?: 4  // Default to 4 cycles if not found
+
+        for (currentCycle in 1..totalCycles) {
+            // Generate the plan for each cycle
+            val cycleTasks = generateCyclePlan(
+                currentCycle = currentCycle,
+                thirtyDayForecastData = thirtyDayForecastData,
+                riceVariety = riceVariety,
+                riceVarietyDetails = riceVarietyDetails
+            )
+            // Add the tasks for this cycle to the overall list
+            tasks.addAll(cycleTasks)
+        }
+        viewModelScope.launch {
+            tasks.forEach { task ->
                 taskRepository.insertTask(task)
             }
         }
+        Log.d("CyclePlanner", "Generated ${tasks.size} tasks for full cycle plan")
     }
 
 
@@ -186,7 +206,10 @@ class FarmingViewModel @Inject constructor(
             try {
                 // Mark task as completed and update with outcome
                 taskRepository.markTaskAsCompletedWithOutcome(task.id, outcome)
-                Log.d("FarmingViewModel", "Task marked as completed: ${task.task}, Outcome: $outcome")
+                Log.d(
+                    "FarmingViewModel",
+                    "Task marked as completed: ${task.task}, Outcome: $outcome"
+                )
 
                 // Insert a log entry for the completed task
                 val log = Logs(
@@ -201,199 +224,177 @@ class FarmingViewModel @Inject constructor(
     }
 
     val riceVarietyDetails = mapOf(
-        "IR64" to mapOf("planting" to 0, "healthCheck" to 14, "fertilizing" to 10, "pestMonitoring" to "rain"),
-        "NSIC Rc222" to mapOf("planting" to 0, "healthCheck" to 21, "fertilizing" to 12, "pestMonitoring" to "rain"),
-        "PSB Rc18" to mapOf("planting" to 0, "healthCheck" to 14, "fertilizing" to 10, "pestMonitoring" to "rain"),
-        "NSIC Rc160" to mapOf("planting" to 0, "healthCheck" to 18, "fertilizing" to 11, "pestMonitoring" to "rain"),
-        "PSB Rc82" to mapOf("planting" to 0, "healthCheck" to 14, "fertilizing" to 10, "pestMonitoring" to "rain")
+        "IR64" to mapOf(
+            "planting" to 0,
+            "healthCheck" to 14,
+            "fertilizing" to 10,
+            "pestMonitoring" to "rain",
+            "totalCycles" to 3 // 120 days divided by 30-day cycles
+        ),
+        "NSIC Rc222" to mapOf(
+            "planting" to 0,
+            "healthCheck" to 21,
+            "fertilizing" to 12,
+            "pestMonitoring" to "rain",
+            "totalCycles" to 4 // 115 days
+        ),
+        "PSB Rc18" to mapOf(
+            "planting" to 0,
+            "healthCheck" to 14,
+            "fertilizing" to 10,
+            "pestMonitoring" to "rain",
+            "totalCycles" to 5 // 105 days
+        ),
+        "NSIC Rc160" to mapOf(
+            "planting" to 0,
+            "healthCheck" to 18,
+            "fertilizing" to 11,
+            "pestMonitoring" to "rain",
+            "totalCycles" to 3 // 110 days
+        ),
+        "PSB Rc82" to mapOf(
+            "planting" to 0,
+            "healthCheck" to 14,
+            "fertilizing" to 10,
+            "pestMonitoring" to "rain",
+            "totalCycles" to 4 // 100 days
+        )
     )
 
+
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateTasks(
+    fun generateCyclePlan(
+        currentCycle: Int,
         thirtyDayForecastData: ThirtyDayForecastResponse?,
         riceVariety: String,
-        riceVarietyDetails: Map<String, Map<String, Any>> // Added this parameter
+        riceVarietyDetails: Map<String, Map<String, Any>> // Rice variety-specific details
     ): List<Task> {
         val tasks = mutableListOf<Task>()
 
-
-        // Safety check for null or empty data
         if (thirtyDayForecastData == null || thirtyDayForecastData.list.isEmpty()) {
-            Log.d("TaskGenerator", "No weather data available for task generation.")
+            Log.d("CyclePlanner", "No weather data available for cycle planning.")
             return tasks
         }
 
-        Log.d("TaskGenerator", "Generating tasks for rice variety: $riceVariety")
+        Log.d("CyclePlanner", "Generating plan for cycle $currentCycle, rice variety: $riceVariety")
 
-        // Retrieve the rice variety details from the map
-        val varietyDetails = riceVarietyDetails[riceVariety]
-
-        if (varietyDetails == null) {
-            Log.d("TaskGenerator", "Rice variety details not found for: $riceVariety")
+        val varietyDetails = riceVarietyDetails[riceVariety] ?: run {
+            Log.d("CyclePlanner", "Rice variety details not found for: $riceVariety")
             return tasks
         }
 
-        // Find planting date
-        val plantingTask = thirtyDayForecastData.list.find { day ->
-            day.weather.any { it.main != "Rain" }
-        }?.let { clearDay ->
-            val plantingDate = Instant.ofEpochSecond(clearDay.dt.toLong())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
+        // Generate start date for the current cycle based on the rice variety and cycle number
+        val cycleStartDate =
+            LocalDate.now().plusDays((currentCycle - 1) * 30L) // Default to today for simplicity
+        val cycleEndDate = cycleStartDate.plusDays(30)
 
-            Task(
-                date = plantingDate,
-                task = "Plant rice (${riceVariety}) on this day.",
-                status = "Pending",
-                type = "Planting"
-            ).also {
-                tasks.add(it)
-                Log.d("TaskGenerator", "Added planting task for date: $plantingDate")
+        // 1. Planting Task (First Cycle Only)
+        if (currentCycle == 1) {
+            val plantingTask = thirtyDayForecastData.list.find { day ->
+                day.weather.any { it.main != "Rain" }
+            }?.let { clearDay ->
+                val plantingDate = Instant.ofEpochSecond(clearDay.dt.toLong())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+
+                // Add planting task to the list of tasks
+                Task(
+                    date = plantingDate,
+                    task = "Plant rice (${riceVariety}) on this day.",
+                    status = "Pending",
+                    type = "Planting"
+                ).also { tasks.add(it) }
+            }
+
+            // Ensure planting task is added even if no clear day was found
+            if (plantingTask == null) {
+                tasks.add(
+                    Task(
+                        date = cycleStartDate,  // Default to cycle start date if no clear day is found
+                        task = "Plant rice (${riceVariety}) on this day.",
+                        status = "Pending",
+                        type = "Planting"
+                    )
+                )
             }
         }
 
-        // Ensure planting task exists before scheduling other tasks
-        plantingTask?.let { planting ->
-            val plantingDate = planting.date
-
-            // 1. Post-Planting Health Monitoring (using the offset from riceVarietyDetails)
-            val healthCheckOffset = varietyDetails["healthCheck"] as? Int ?: 14 // Default to 14 if not found
+        // 2. Health Monitoring Tasks (After planting task)
+        val healthCheckOffset = varietyDetails["healthCheck"] as? Int ?: 14
+        var healthCheckDate = cycleStartDate.plusDays(healthCheckOffset.toLong())
+        val periodicHealthCheckInterval = 7 // Weekly health checks
+        while (healthCheckDate.isBefore(cycleEndDate)) {
             tasks.add(
                 Task(
-                    date = plantingDate.plusDays(healthCheckOffset.toLong()),
+                    date = healthCheckDate,
                     task = "Take a picture of the rice plants for health monitoring.",
                     status = "Pending",
                     type = "HealthCheck"
                 )
             )
-            Log.d("TaskGenerator", "Added plant health monitoring task for date: ${plantingDate.plusDays(healthCheckOffset.toLong())}")
+            healthCheckDate = healthCheckDate.plusDays(periodicHealthCheckInterval.toLong())
+        }
 
-            // 2. Fertilizer Application (using the offset from riceVarietyDetails)
-            val fertilizingOffset = varietyDetails["fertilizing"] as? Int ?: 10 // Default to 10 if not found
-            tasks.add(
-                Task(
-                    date = plantingDate.plusDays(fertilizingOffset.toLong()),
-                    task = "Apply fertilizer (NPK mix).",
-                    status = "Pending",
-                    type = "Fertilizing"
-                )
+        // 3. Fertilizer Application Task
+        val fertilizingOffset = varietyDetails["fertilizing"] as? Int ?: 10
+        tasks.add(
+            Task(
+                date = cycleStartDate.plusDays(fertilizingOffset.toLong()),
+                task = "Apply fertilizer (NPK mix).",
+                status = "Pending",
+                type = "Fertilizing"
             )
-            Log.d("TaskGenerator", "Added fertilizing task for date: ${plantingDate.plusDays(fertilizingOffset.toLong())}")
+        )
 
-            // 3. Pest Monitoring: Only schedule after planting if rain occurs
-            val rainyDays = thirtyDayForecastData.list.filter { day ->
-                day.weather.any { it.main == "Rain" || it.main == "Thunderstorm" }
-            }
-
-
-            rainyDays.firstOrNull()?.let { rainDay ->
-                val rainDate = Instant.ofEpochSecond(rainDay.dt.toLong())
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-
-                // Schedule only if rain occurs after planting
-                if (rainDate.isAfter(plantingDate)) {
-                    tasks.add(
-                        Task(
-                            date = rainDate.plusDays(1),
-                            task = "Monitor for pests and diseases after rain. Take a picture if any issues arise.",
-                            status = "Pending",
-                            type = "PestMonitoring"
-                        )
-                    )
-                    Log.d("TaskGenerator", "Added pest monitoring task for date: ${rainDate.plusDays(1)}")
-                } else {
-                    Log.d("TaskGenerator", "Skipping pest monitoring task before planting date.")
-                }
-
-                if (rainyDays.isEmpty()) {
-                    // Consider adding a task for pest monitoring based on other conditions, e.g., temperature, humidity.
-                    tasks.add(
-                        Task(
-                            date = plantingDate.plusDays(10),  // Example: monitor on the 3rd day if no rain is expected.
-                            task = "Monitor for pests and diseases even without rain.",
-                            status = "Pending",
-                            type = "PestMonitoring"
-                        )
-                    )
-                }
-            }
-
-            // 4. Pest Inspection: Only after significant rain events (using trigger from variety details)
-            if (rainyDays.size >= 3) {
-                val lastRainyDay = rainyDays.last().let {
-                    Instant.ofEpochSecond(it.dt.toLong()).atZone(ZoneId.systemDefault()).toLocalDate()
-                }
-
-                val pestInspectionOffset = varietyDetails["pestInspection"] as? Int ?: 2 // Default to 2 if not found
-                val pestInspectionDate = lastRainyDay.plusDays(pestInspectionOffset.toLong())
-
-                if (pestInspectionDate.isAfter(plantingDate)) {
-                    tasks.add(
-                        Task(
-                            date = pestInspectionDate,
-                            task = "Conduct full pest inspection due to multiple rainy days.",
-                            status = "Pending",
-                            type = "PestInspection"
-                        )
-                    )
-                    Log.d("TaskGenerator", "Added pest inspection task due to heavy rain on $pestInspectionDate")
-                } else {
-                    Log.d("TaskGenerator", "Skipping pest inspection before planting date.")
-                }
-            }
-
-
-
-            val periodicHealthCheckInterval = 7 // Example: every 7 days after the initial health check
-            val periodicWeedingInterval = 7 // Weeding every 7 days after the initial planting
-
-// Health Check Tasks every 7 days after planting
-            var healthCheckDate = plantingDate.plusDays(healthCheckOffset.toLong())
-            while (healthCheckDate.isBefore(plantingDate.plusDays(30))) {
+        // 4. Pest Monitoring Tasks
+        val rainyDays = thirtyDayForecastData.list.filter { day ->
+            day.weather.any { it.main == "Rain" || it.main == "Thunderstorm" }
+        }
+        rainyDays.firstOrNull()?.let { rainDay ->
+            val rainDate = Instant.ofEpochSecond(rainDay.dt.toLong())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+            if (rainDate.isAfter(cycleStartDate)) {
                 tasks.add(
                     Task(
-                        date = healthCheckDate,
-                        task = "Take a picture of the rice plants for health monitoring.",
+                        date = rainDate.plusDays(1),
+                        task = "Monitor for pests and diseases after rain. Take a picture if any issues arise.",
                         status = "Pending",
-                        type = "HealthCheck"
+                        type = "PestMonitoring"
                     )
                 )
-                healthCheckDate = healthCheckDate.plusDays(periodicHealthCheckInterval.toLong())
             }
+        }
 
-// Weeding Tasks every 7 days after planting
-            var weedingDate = plantingDate.plusDays(7)
-            while (weedingDate.isBefore(plantingDate.plusDays(30))) {
-                tasks.add(
-                    Task(
-                        date = weedingDate,
-                        task = "Weed the rice fields.",
-                        status = "Pending",
-                        type = "Weeding"
-                    )
-                )
-                weedingDate = weedingDate.plusDays(periodicWeedingInterval.toLong())
-            }
-
+        // 5. Weeding Tasks (After planting and fertilizing tasks)
+        val periodicWeedingInterval = 7 // Weekly weeding
+        var weedingDate = cycleStartDate.plusDays(12)
+        while (weedingDate.isBefore(cycleEndDate)) {
             tasks.add(
                 Task(
-                    date = plantingDate.plusDays(32),
-                    task = "Review completed tasks and prepare for the next cycle.",
+                    date = weedingDate,
+                    task = "Weed the rice fields.",
                     status = "Pending",
-                    type = "SummaryReport"
+                    type = "Weeding"
                 )
             )
-            Log.d("TaskGenerator", "Added cycle summary task for date: ${plantingDate.plusDays(30)}")
+            weedingDate = weedingDate.plusDays(periodicWeedingInterval.toLong())
+        }
 
+        // 6. Prepare for the Next Cycle
+        tasks.add(
+            Task(
+                date = cycleEndDate,
+                task = "Review completed cycle and prepare for the next rice stage.",
+                status = "Pending",
+                type = "SummaryReport"
+            )
+        )
 
-        } ?: Log.d("TaskGenerator", "No planting task was generated, skipping other tasks.")
-
-        // Debugging: Log the total number of tasks generated
-        Log.d("TaskGenerator", "Total tasks generated: ${tasks.size}")
-
+        Log.d("CyclePlanner", "Generated ${tasks.size} tasks for cycle $currentCycle")
         return tasks
     }
+
 
     fun generateSummaryReport(tasks: List<Task>, weatherLogs: List<WeatherLog>): SummaryReport {
         val completedTasks = tasks.filter { it.status == "Completed" }
@@ -402,13 +403,15 @@ class FarmingViewModel @Inject constructor(
         val rainyDays = weatherLogs.count { it.weatherMain == "Rain" }
         val dryDays = weatherLogs.size - rainyDays
 
-        val healthCheckIssues = tasks.filter { it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" && it.outcome == "Pests Detected" || it.outcome == "Diseased" }
+        val healthCheckIssues =
+            tasks.filter { it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" && it.outcome == "Pests Detected" || it.outcome == "Diseased" }
 
         val completionRate = if (tasks.isNotEmpty()) {
             (completedTasks.size.toDouble() / tasks.size.toDouble()) * 100
         } else 0.0
 
-        val pestMonitoringTasks = tasks.filter { it.type == "PestMonitoring" || it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" }
+        val pestMonitoringTasks =
+            tasks.filter { it.type == "PestMonitoring" || it.type == "HealthCheck" || it.type == "PestInspection" || it.type == "Weeding" }
         val completedPestTasks = pestMonitoringTasks.filter { it.status == "Completed" }
         val pestCompletionRate = if (pestMonitoringTasks.isNotEmpty()) {
             (completedPestTasks.size.toDouble() / pestMonitoringTasks.size.toDouble()) * 100
@@ -440,12 +443,22 @@ class FarmingViewModel @Inject constructor(
             pestCompletionRate = pestCompletionRate,
             weatherImpact = weatherImpactAnalysis,
             cycleSuccess = cycleSuccess,  // Added success evaluation
-            recommendations = generateRecommendations(pendingTasks, healthCheckIssues, completedTasks, weatherLogs)
+            recommendations = generateRecommendations(
+                pendingTasks,
+                healthCheckIssues,
+                completedTasks,
+                weatherLogs
+            )
         )
     }
 
 
-    fun generateRecommendations(pendingTasks: List<Task>, healthIssues: List<Task>, completedTasks: List<Task>, weatherLogs: List<WeatherLog>): List<String> {
+    fun generateRecommendations(
+        pendingTasks: List<Task>,
+        healthIssues: List<Task>,
+        completedTasks: List<Task>,
+        weatherLogs: List<WeatherLog>
+    ): List<String> {
         val recommendations = mutableListOf<String>()
 
         // Pending Tasks

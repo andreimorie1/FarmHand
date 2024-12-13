@@ -113,8 +113,7 @@ fun farmingScreen(viewModel: FarmingViewModel, weatherdata: ThirtyDayForecastRes
                     tasks = AllTasks.value,
                     weatherLogs = viewModel.generateWeatherLogs(weatherdata)
                 ),
-                onDismiss = { reportDialog = false
-                    viewModel.resetCycleData() },
+                onDismiss = { reportDialog = false},
                 onDownloadPdf = {
                     viewModel.generatePdf(
                         context = context,
