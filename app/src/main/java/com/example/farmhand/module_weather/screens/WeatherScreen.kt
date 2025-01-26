@@ -31,7 +31,7 @@ fun WeatherScreen(
     var hasLocationPermission by remember { mutableStateOf(locationManager.hasLocationPermission()) }
     val currentLocation by remember { locationManager.currentLocation }
 
-    val apiKey = "5e970ffe1ccf427cc2885d907f84e683"
+    val apiKey = "API_KEY"
     val isFetchingData by viewModel.isFetchingData.collectAsState()
     var hasFetchedWeatherData by remember { mutableStateOf(false) }
 
