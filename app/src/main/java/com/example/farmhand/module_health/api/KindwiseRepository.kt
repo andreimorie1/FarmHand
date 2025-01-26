@@ -7,7 +7,7 @@ import javax.inject.Inject
 class KindwiseRepository @Inject constructor() {
     suspend fun createIdentification(request: CreateidentificationRequest): Result<ActualIdentificationResponse> {
         return try {
-            val apiKey = "d3eEobXnaO6OZSJfOLMO7XfMgc2PDGN7kzXdTfk7qAgg07IZdv"
+            val apiKey = "API_KEY"
             val response = RetrofitClient.kindwiseApiService.createIdentification(apiKey, request)
             Result.success(response)
         } catch (e: Exception) {
